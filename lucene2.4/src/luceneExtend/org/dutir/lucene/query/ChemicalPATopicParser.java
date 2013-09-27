@@ -208,10 +208,9 @@ public class ChemicalPATopicParser extends LuceneQueryParser {
 				int len = children.getLength();
 				for (int i = 0; i < len; i++) {
 					Node nd = children.item(i);
-					getDate(sb, nd, tag);// 递归遍历DOM树
+					getDate(sb, nd, tag);// ������DOM��				}
+
 				}
-
-
 		}
 	}
 	
@@ -234,7 +233,7 @@ public class ChemicalPATopicParser extends LuceneQueryParser {
 		if (nodeName.equalsIgnoreCase("invention-title")) {
 			Node attr = node.getAttributes().getNamedItem("lang");
 			if(attr!= null && attr.getNodeValue().equalsIgnoreCase("En")){
-				sb.append(DomNodeUtils.getText(node));// 取得结点值，即开始与结束标签之间的信息			
+				sb.append(DomNodeUtils.getText(node));// ���缁���硷��冲�濮��缁�����涔����俊��		
 				tag = true;
 			}
 		}
@@ -244,10 +243,9 @@ public class ChemicalPATopicParser extends LuceneQueryParser {
 				int len = children.getLength();
 				for (int i = 0; i < len; i++) {
 					Node nd = children.item(i);
-					getText(sb, nd, tag);// 递归遍历DOM树
+					getText(sb, nd, tag);// ������DOM��				}
+
 				}
-
-
 		}
 	}
 	

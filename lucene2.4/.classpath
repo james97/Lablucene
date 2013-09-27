@@ -1,58 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="contrib/analyzers/src/java"/>
-	<classpathentry kind="src" path="contrib/analyzers/src/test"/>
-	<classpathentry kind="src" path="contrib/ant/src/java"/>
-	<classpathentry kind="src" path="contrib/ant/src/test"/>
-	<classpathentry kind="src" path="contrib/benchmark/src/java"/>
-	<classpathentry kind="src" path="contrib/benchmark/src/test"/>
-	<classpathentry kind="src" path="contrib/db/bdb-je/src/java"/>
-	<classpathentry kind="src" path="contrib/db/bdb-je/src/test"/>
-	<classpathentry kind="src" path="contrib/db/bdb/src/java"/>
-	<classpathentry kind="src" path="contrib/db/bdb/src/test"/>
-	<classpathentry kind="src" path="contrib/highlighter/src/java"/>
-	<classpathentry kind="src" path="contrib/highlighter/src/test"/>
-	<classpathentry kind="src" path="contrib/instantiated/src/java"/>
-	<classpathentry kind="src" path="contrib/instantiated/src/test"/>
-	<classpathentry kind="src" path="contrib/lucli/src/java"/>
-	<classpathentry kind="src" path="contrib/memory/src/java"/>
-	<classpathentry kind="src" path="contrib/memory/src/test"/>
-	<classpathentry kind="src" path="contrib/miscellaneous/src/java"/>
-	<classpathentry kind="src" path="contrib/miscellaneous/src/test"/>
-	<classpathentry kind="src" path="contrib/queries/src/java"/>
-	<classpathentry kind="src" path="contrib/queries/src/test"/>
-	<classpathentry kind="src" path="contrib/regex/src/java"/>
-	<classpathentry kind="src" path="contrib/regex/src/test"/>
-	<classpathentry kind="src" path="contrib/snowball/src/java"/>
-	<classpathentry kind="src" path="contrib/snowball/src/test"/>
-	<classpathentry kind="src" path="contrib/spellchecker/src/java"/>
-	<classpathentry kind="src" path="contrib/spellchecker/src/test"/>
-	<classpathentry kind="src" path="contrib/surround/src/java"/>
-	<classpathentry kind="src" path="contrib/surround/src/test"/>
-	<classpathentry kind="src" path="contrib/swing/src/java"/>
-	<classpathentry kind="src" path="contrib/swing/src/test"/>
-	<classpathentry kind="src" path="contrib/wikipedia/src/java"/>
-	<classpathentry kind="src" path="contrib/wikipedia/src/test"/>
-	<classpathentry kind="src" path="contrib/wordnet/src/java"/>
-	<classpathentry kind="src" path="contrib/xml-query-parser/src/java"/>
-	<classpathentry kind="src" path="contrib/xml-query-parser/src/test"/>
-	<classpathentry kind="src" path="lucene/predictor"/>
-	<classpathentry excluding="org/apache/lucene/postProcess/" kind="src" path="src/application"/>
-	<classpathentry kind="src" path="src/application/org/apache/lucene/postProcess"/>
-	<classpathentry kind="src" path="src/contribute/analyzers/common/src/java"/>
-	<classpathentry kind="src" path="src/contribute/analyzers/common/src/test"/>
-	<classpathentry kind="src" path="src/contribute/analyzers/smartcn/src/java"/>
-	<classpathentry kind="src" path="src/contribute/analyzers/smartcn/src/test"/>
-	<classpathentry kind="src" path="src/demo"/>
-	<classpathentry kind="src" path="src/gcj"/>
-	<classpathentry excluding="org/apache/lucene/analysis/" kind="src" path="src/java"/>
-	<classpathentry kind="src" path="src/java/org/apache/lucene/analysis"/>
-	<classpathentry excluding="org/apache/lucene/search/|org/apache/lucene/search/model/|org/apache/lucene/postProcess/" kind="src" path="src/luceneExtend"/>
-	<classpathentry kind="src" path="src/luceneExtend/org/apache/lucene/postProcess"/>
-	<classpathentry excluding="model/" kind="src" path="src/luceneExtend/org/apache/lucene/search"/>
-	<classpathentry kind="src" path="src/luceneExtend/org/apache/lucene/search/model"/>
-	<classpathentry kind="src" path="src/revised"/>
-	<classpathentry kind="src" path="src/test"/>
+	<classpathentry kind="src" path="src/java"/>
+	<classpathentry kind="src" path="src/luceneExtend"/>
+	<classpathentry kind="src" path="src/application"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="/Users/James/Documents/Projects/lucene2.4/lib/activation.jar"/>
 	<classpathentry kind="lib" path="/Users/James/Documents/Projects/lucene2.4/lib/barrister-0.1.8.jar"/>
 	<classpathentry kind="lib" path="/Users/James/Documents/Projects/lucene2.4/lib/bzip2.jar"/>
