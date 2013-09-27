@@ -1,3 +1,0 @@
-#add the qrels files to use for evaluation
-./TopicQrel/2006topicsTrec.txt
-./TopicQrel/2007topicsTrec.txt

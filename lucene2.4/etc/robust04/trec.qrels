@@ -1,2 +1,0 @@
-#add the qrels files to use for evaluation
-./TopicQrel/qrels.robust2004.txt
