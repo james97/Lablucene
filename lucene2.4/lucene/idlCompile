@@ -1,0 +1,3 @@
+idl2java.sh -j predictor.json -p zheng.py -o predictorM
+barrister -t "Predictor Interface" -d Predictor.html -j Predictor.json predictor.idl
+barrister -t "Predictor Interface" -d Predictor.html -j calc.json predictor.idl

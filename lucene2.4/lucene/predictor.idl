@@ -1,0 +1,6 @@
+
+interface Predictor {
+    predict(inst_str string) float
+    predict_id(inst_str string, queryid int) float
+}
+
