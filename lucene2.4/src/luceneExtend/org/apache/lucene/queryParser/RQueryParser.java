@@ -15,6 +15,7 @@ import org.apache.lucene.search.TermQuery;
 
 /**
  * @author yezheng
+ * This is a new parser
  * 
  */
 public class RQueryParser extends QueryParser {
