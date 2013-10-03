@@ -3,6 +3,8 @@
  */
 package org.apache.lucene.postProcess.termselector;
 
+import gnu.trove.TObjectFloatHashMap;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,6 +24,7 @@ import org.dutir.util.Arrays;
 
 /** This is an implementation for the Positional Relevance Model variant 1 proposed by Yuanhua Lv & Chengxiang Zhai
  *  Paper url: http://dl.acm.org/citation.cfm?id=1835546
+ *  
  * @author Jun Miao 
  * 
  */
@@ -77,6 +80,7 @@ public class PRM1TermSelector extends TermSelector {
 	 * @see
 	 * org.apache.lucene.postProcess.termselector.TermSelector#assignTermWeights
 	 * (int[], org.apache.lucene.postProcess.QueryExpansionModel)
+	 * This is used to assign weights for the candidate feedback terms
 	 */
 	@Override
 	public void assignTermWeights(int[] docids, float scores[], QueryExpansionModel QEModel) {
@@ -255,13 +259,9 @@ public class PRM1TermSelector extends TermSelector {
 	@Override
 	public String getInfo() {
 		// TODO Auto-generated method stub
-		return "RM3";
+		return "PRM1";
 	}
 
-	@Override
-	public void assignTermWeights(String[][] terms, int[][] freqs,
-			TermPositionVector[] tfvs, QueryExpansionModel QEModel) {
-		throw new UnsupportedOperationException();
-	}
+	
 
 }
