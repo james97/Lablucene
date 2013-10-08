@@ -14,8 +14,11 @@ import org.apache.log4j.Logger;
 import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.index.TermPositionVector;
 import org.apache.lucene.postProcess.QueryExpansionModel;
+import org.apache.lucene.postProcess.termselector.ProxTermSelector.GeoExpansionTerm;
+import org.apache.lucene.postProcess.termselector.RM3TermSelector.Structure;
 import org.apache.lucene.search.model.Idf;
 
+import org.dutir.lucene.IndexUtility;
 import org.dutir.lucene.util.ApplicationSetup;
 import org.dutir.lucene.util.Rounding;
 import org.dutir.lucene.util.ExpansionTerms.ExpansionTerm;
@@ -30,19 +33,22 @@ import org.dutir.util.Arrays;
  */
 public class PRM1TermSelector extends TermSelector {
 
-	private static Logger logger = Logger.getLogger(RM3TermSelector.class);
+	private static Logger logger = Logger.getLogger(PRM1TermSelector.class);
 //	private float lambda = Float.parseFloat(ApplicationSetup.getProperty(
 //			"expansion.lavrenko.lambda", "0.15"));
+	IndexUtility indexUtil = null; //used to obtain statistical information for terms,e.g., idf 
+	TermSelector selector = null;
 
 	class Structure {
 		/**
 		 * document level LM score (dir smoothing) for each candidate word in docs. 
 		 */
 		float wordDoc[];
-		float ctf =0;
+		float ctf =0; //collection term frequency
 		float cf =0; 
 		float collectWeight = -1;
 		int df = 0;
+		int []termPositions;
 
 		public Structure(int len) {
 			wordDoc = new float[len];
@@ -85,22 +91,37 @@ public class PRM1TermSelector extends TermSelector {
 	@Override
 	public void assignTermWeights(int[] docids, float scores[], QueryExpansionModel QEModel) {
 		
+		//initialize attributes of this class. termMap is used to store return feedback terms
+		//by Jun Miao 08/10/2013
 		float numOfTokens = this.searcher.getNumTokens(field);
 		feedbackSetLength = 0;
 		termMap = new HashMap<String, ExpansionTerm>();
 		float PD[] = new float[docids.length];
 		float docLens[] = new float[docids.length];
 		
+		
+		
+		if (indexUtil == null)
+			indexUtil = new IndexUtility(this.searcher);
+		// get all terms in feedback documents as candidate expansion terms
+		// for each positive feedback document
+		//by Jun Miao 08/10/2013
+		String sterms[][] = new String[docids.length][];
+		int termFreqs[][] = new int[docids.length][];
+		
+		
+		
+		
 		HashMap<String, Structure> map = new HashMap<String, Structure>();
 		for (int i = 0; i < docids.length; i++) {
 			int docid = docids[i];
-			TermFreqVector tfv = null;
+			TermPositionVector tfv = null;
 			try {
-				tfv = this.searcher.getIndexReader().getTermFreqVector(docid,
+				tfv = (TermPositionVector)this.searcher.getIndexReader().getTermFreqVector(docid,
 						field);
 			} catch (IOException e) {
 				e.printStackTrace();
-			}
+			}//Interesting! TermPositionVector is actually the same as TermFreqVector 
 			if (tfv == null)
 				logger.warn("document " + docid + " not found, field=" + field);
 			else {
@@ -119,114 +140,14 @@ public class PRM1TermSelector extends TermSelector {
 						java.util.Arrays.fill(stru.wordDoc, 0);
 						map.put(strterms[j], stru);
 					}
-					stru.wordDoc[i] = score(freqs[j], dl, stru.ctf, numOfTokens);
+					stru.wordDoc[i] = score(freqs[j], dl, stru.ctf, numOfTokens); //calculating the score of a term in a feedback doc
 					stru.df++;
 				}
 			}
-		}
-
-		Structure[] queryStru = new Structure[this.originalQueryTermidSet
-				.size()];
-		int pos = 0;
+		}//extract term positions from the index for each feedback document. streterms[] stores the terms in doc[i] 
+		//in an ascending order
 		
-		HashSet<String> tmpSet = new HashSet<String>();
-		tmpSet.addAll(originalQueryTermidSet); tmpSet.addAll(map.keySet());
-		for (String term : tmpSet) {
-			Structure stru = map.get(term);
-
-			if (stru == null) {
-				stru = new Structure(docids.length);
-				Item item = getItem(term);
-				stru.ctf = item.ctf; 
-				java.util.Arrays.fill(stru.wordDoc, 0);
-				map.put(term, stru);
-			}
-			for(int k=0; k < docLens.length; k++){
-				if(stru.wordDoc[k] == 0){
-					stru.wordDoc[k] = score(0, docLens[k], stru.ctf, numOfTokens); //not log
-				}
-			}
-			if(this.originalQueryTermidSet.contains(term)){
-				queryStru[pos++] = stru;
-			}
-		}
-		float uniform = 1 / (float) docids.length;
-		java.util.Arrays.fill(PD, uniform);
 		
-		float PQ[] = new float[docids.length];
-		java.util.Arrays.fill(PQ, 1);
-		for (int i = 0; i < PQ.length; i++) {
-			for (int j = 0; j < queryStru.length; j++) {
-				PQ[i] *= queryStru[j].wordDoc[i];
-			}
-//			PQ[i] = scores[i];
-		}
-		indriNorm(PQ);
-		
-		int termNum = map.size();
-		ExpansionTerm[] exTerms = new ExpansionTerm[termNum];
-		if(logger.isDebugEnabled()) logger.debug("the total number of terms in feedback docs: " + termNum);
-		
-		// **************RM1 -- Indri implementation**********************//
-		float total = 0;
-		pos = 0;
-		float sum = 0;
-		for (Entry<String, Structure> entry : map.entrySet()) {
-			String w = entry.getKey();
-			Structure ws = entry.getValue();
-			float weight = 0;
-			for (int i = 0; i < ws.wordDoc.length; i++) {
-				weight += PD[i] * ws.wordDoc[i] * PQ[i];
-			}
-
-			if (ws.df < EXPANSION_MIN_DOCUMENTS) {
-				weight = 0;
-			}
-
-			total += weight;
-
-			exTerms[pos] = new ExpansionTerm(w, 0);
-			exTerms[pos].setWeightExpansion(weight);
-			pos++;
-			sum += weight;
-		}
-
-		termNum = pos;
-
-		java.util.Arrays.sort(exTerms);
-
-		if (logger.isDebugEnabled()) {
-			StringBuilder buf = new StringBuilder();
-			int tmpPos = 0;
-			for (int i = 0; tmpPos < 40 && i < exTerms.length; i++) {
-				if (true || exTerms[i].getWeightExpansion() < 1) {
-					tmpPos++;
-					buf.append(exTerms[i] + "\t");
-				}
-			}
-			if(logger.isDebugEnabled()) logger.debug("original: " + buf.toString());
-		}
-
-		if(logger.isDebugEnabled()) logger.debug("the total weight: " + total);
-		if(logger.isDebugEnabled()) logger.debug("maxWeight=" + exTerms[0].getWeightExpansion()
-				+ ", minWeight="
-				+ exTerms[exTerms.length - 1].getWeightExpansion());
-		
-		StringBuilder buf = new StringBuilder();
-		for (pos = 0; pos < termNum; pos++) {
-
-			if (logger.isDebugEnabled()
-					&& this.originalQueryTermidSet.contains(exTerms[pos]
-							.getTerm())) {
-				buf.append(exTerms[pos] + "\t");
-			}
-			exTerms[pos].setWeightExpansion(exTerms[pos].getWeightExpansion() / sum);
-			this.termMap.put(exTerms[pos].getTerm(), exTerms[pos]);
-		}
-
-		if (logger.isDebugEnabled()) {
-			logger.debug("original Query Weight: " + buf.toString());
-		}
 	}
 
 	// In:  log(x1) log(x2) ... log(xN)
@@ -237,20 +158,7 @@ public class PRM1TermSelector extends TermSelector {
 	// This is done by adding a constant K which cancels out
 	// Right now K is set to maximally preserve the highest value
 	// but could be altered to a min or average, or whatever...
-	private void indriNorm(float[] pQ) {
-
-//		float K = pQ[0]; // first is max
-		float sum = 0;
-
-		for (int i=0; i < pQ.length; i++) {
-//			pQ[i] = K * pQ[i];
-			sum += pQ[i];
-		}
-		for (int i=0; i < pQ.length; i++) {
-			 pQ[i] /= sum;
-		}
-	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -260,6 +168,12 @@ public class PRM1TermSelector extends TermSelector {
 	public String getInfo() {
 		// TODO Auto-generated method stub
 		return "PRM1";
+	}
+	@Override
+	public void assignTermWeights(String[][] terms, int[][] freqs,
+			TermPositionVector[] tfvs, QueryExpansionModel QEModel) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	
