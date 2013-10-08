@@ -6,6 +6,7 @@ package org.apache.lucene.postProcess.termselector;
 import gnu.trove.TObjectFloatHashMap;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
@@ -43,15 +44,20 @@ public class PRM1TermSelector extends TermSelector {
 		/**
 		 * document level LM score (dir smoothing) for each candidate word in docs. 
 		 */
+		class termPositionVector{
+			int []termPostions;
+		}
+		
 		float wordDoc[];
 		float ctf =0; //collection term frequency
 		float cf =0; 
 		float collectWeight = -1;
 		int df = 0;
-		int []termPositions;
+		ArrayList<termPositionVector> termPositions; //term position vectors in each feedback document
 
 		public Structure(int len) {
 			wordDoc = new float[len];
+			termPositions = new ArrayList<termPositionVector>();
 		}
 		
 		public String toString(){
@@ -73,9 +79,10 @@ public class PRM1TermSelector extends TermSelector {
 			scores[i] = Idf.exp(max + _scores[i]);
 		}
 	}
-	static String dmu = ApplicationSetup.getProperty("dlm.mu", "500");
-	static float mu = Integer.parseInt(ApplicationSetup.getProperty("rm.mu", dmu));
+	
+	static double alpha = Double.parseDouble(ApplicationSetup.getProperty("prmJM.alpha", "0.5"));
 //	float numOfTokens = this.searcher.getNumTokens(field);
+	
 	private float score(float tf, float docLength, float termFrequency, float numberOfTokens) {
 		float pc = termFrequency / numberOfTokens;
 		return  (tf + mu * pc) / (docLength + mu);
@@ -140,7 +147,9 @@ public class PRM1TermSelector extends TermSelector {
 						java.util.Arrays.fill(stru.wordDoc, 0);
 						map.put(strterms[j], stru);
 					}
-					stru.wordDoc[i] = score(freqs[j], dl, stru.ctf, numOfTokens); //calculating the score of a term in a feedback doc
+					//calculating the score of a term in a feedback doc.
+					//TODO: Modify this to apply PRM1
+					stru.wordDoc[i] = score(freqs[j], dl, stru.ctf, numOfTokens); 																				 
 					stru.df++;
 				}
 			}
