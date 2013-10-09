@@ -168,6 +168,26 @@ public class PRM1TermSelector extends TermSelector {
 	// Right now K is set to maximally preserve the highest value
 	// but could be altered to a min or average, or whatever...
 	
+	
+	/* Return the total propagated count of term w at position i from the occurrences of
+	 * w in all the positions. An implementation of c'(w,i) and Gaussian kernel is used.
+	 * 
+	 * @param positionVector   All positions of term w in the feedback document
+	 * @param i     The position which term w can associate
+	 * @param sigma The parameter for the Guassian kernel
+	 * @return 		The total propagated count of term w at position i from the occurrences of
+	 * w in all the positions. Actually, it denotes the association of a term w on the term at position i.
+	 * **/
+	
+	private double propagatedCount(int[] positionVector, int i,double sigma){
+		
+		double count = 0;
+		for (int j = 0; j < positionVector.length; j++){
+			count += Math.exp(-Math.pow((i - positionVector[j])/(2 * Math.pow(sigma, 2.0)), 2.0));
+		}
+		return count;
+		
+	}
 	/*
 	 * (non-Javadoc)
 	 * 
