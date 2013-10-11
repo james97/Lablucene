@@ -180,6 +180,7 @@ public class PRM1TermSelector extends TermSelector {
 	 * @param sigma The parameter for the Guassian kernel
 	 * @param colProbability    The collection probability of term w
 	 * @return 		The smoothed probability of a term w appearing at position i in a feedback document
+	 * @author Jun Miao 10/11/2013
 	 * **/
 	
 	private double probTermGivenDocPosition(int[] positionVector, int i, double lamda, double sigma, double colProbability){
@@ -201,7 +202,7 @@ public class PRM1TermSelector extends TermSelector {
 	 * @param sigma The parameter for the Guassian kernel
 	 * @return 		The total propagated count of term w at position i from the occurrences of
 	 * w in all the positions. Actually, it denotes the association of a term w on the term at position i.
-	 * 
+	 * @author Jun Miao 10/08/2013
 	 * **/
 	
 	private double propagatedCount(int[] positionVector, int i,double sigma){
@@ -235,6 +236,7 @@ public class PRM1TermSelector extends TermSelector {
 		 * Information of feedback terms, including tf in each feedback document, 
 		 * feedback document length, collection probability and position vectors in 
 		 * all feedback documents 
+		 * Jun Miao 10/11/2013
 		 */
 		double tfPerDoc[];
 		double fbDoclength[];
