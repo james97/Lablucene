@@ -100,7 +100,7 @@ public class PRM1TermSelector extends TermSelector {
 		
 		//initialize attributes of this class. termMap is used to store return feedback terms
 		//by Jun Miao 08/10/2013
-		float numOfTokens = this.searcher.getNumTokens(field);
+		float collectionLength = this.searcher.getNumTokens(field);
 		feedbackSetLength = 0;
 		termMap = new HashMap<String, ExpansionTerm>();
 		float PD[] = new float[docids.length];
@@ -169,14 +169,39 @@ public class PRM1TermSelector extends TermSelector {
 	// but could be altered to a min or average, or whatever...
 	
 	
+	
+	/* Return the smoothed probability of a term w appearing at position i in a feedback document based on
+	 * positional language model (plm). 
+	 * Implementation of Formula 16
+	 * 
+	 * @param positionVector   All positions of term w in the feedback document
+	 * @param i     The position which term w can associate
+	 * @lamda		The tune parameter for JM smoothing
+	 * @param sigma The parameter for the Guassian kernel
+	 * @param colProbability    The collection probability of term w
+	 * @return 		The smoothed probability of a term w appearing at position i in a feedback document
+	 * **/
+	
+	private double probTermGivenDocPosition(int[] positionVector, int i, double lamda, double sigma, double colProbability){
+		double probability;
+		
+		double plmProbability = propagatedCount(positionVector, i, sigma) / (2 * Math.PI * Math.pow(sigma, 2.0));
+		probability = (1 - lamda) * plmProbability + lamda * colProbability;
+		return probability;
+				
+	}
+	
+	
 	/* Return the total propagated count of term w at position i from the occurrences of
 	 * w in all the positions. An implementation of c'(w,i) and Gaussian kernel is used.
+	 * Implementation of Formula 13
 	 * 
 	 * @param positionVector   All positions of term w in the feedback document
 	 * @param i     The position which term w can associate
 	 * @param sigma The parameter for the Guassian kernel
 	 * @return 		The total propagated count of term w at position i from the occurrences of
 	 * w in all the positions. Actually, it denotes the association of a term w on the term at position i.
+	 * 
 	 * **/
 	
 	private double propagatedCount(int[] positionVector, int i,double sigma){
@@ -204,6 +229,58 @@ public class PRM1TermSelector extends TermSelector {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	private class fbTermInfo {
+		/**
+		 * Information of feedback terms, including tf in each feedback document, 
+		 * feedback document length, collection probability and position vectors in 
+		 * all feedback documents 
+		 */
+		double tfPerDoc[];
+		double fbDoclength[];
+		int positionPerDoc[][] = null;
+		private double collectionProbability = -1;
+		
+		protected void setTfPerDoc(double tf, int docid){
+			tfPerDoc[docid] = tf;
+		}
+		
+		protected double getTfPerDoc(int docid){
+			return tfPerDoc[docid];
+		}
+		
+		protected void setfbDocLength(double docLength, int docid){
+			fbDoclength[docid] = docLength;
+		}
+		
+		protected double getfbDocLength(int docid){
+			return fbDoclength[docid];
+		}
+		
+		protected void setpositionPerDoc(int[] positions, int docid){
+			positionPerDoc[docid] = positions;
+		}
+		
+		protected int[] getpositionPerDoc(int docid){
+			return positionPerDoc[docid];
+		}
+		
+		protected void setcollectionProbability(double colprobability){
+			collectionProbability = colprobability;
+		}
+		
+		protected double getcollectionProbability(){
+			return collectionProbability;
+		}
+
+
+		public fbTermInfo(int len) {
+			tfPerDoc = new double[len];
+			fbDoclength = new double[len];
+			positionPerDoc = new int[len][];
+		}
+	}
+	
 
 	
 
