@@ -170,6 +170,34 @@ public class PRM1TermSelector extends TermSelector {
 	
 	
 	
+	
+	/* Return the query probability given a document and a position. 
+	 * Implementation of Formula 17
+	 * 
+	 * @param queryTermMap   All query terms denoted by the fbTermInfo objects
+	 * @param i     The position which feedback term w can associate
+	 * @lamda		The tune parameter for JM smoothing in calling queryTermProbabilityWithPosition() method
+	 * @param sigma The parameter for the Guassian kernel in calling queryTermProbabilityWithPosition() method
+	 * @param docid The id of feedback document
+	 * @return 		The query probability given the docid-th feedback document and a position
+	 * @author Jun Miao 10/15/2013
+	 * **/
+	
+	 //TODO:finish the method
+	private double probQueryWithPositions(HashMap<String, fbTermInfo> queryTermMap, int i, double lamda, double sigma, int docid){
+	
+		return 0;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	/* Return the smoothed probability of a term w appearing at position i in a feedback document based on
 	 * positional language model (plm). 
 	 * Implementation of Formula 16
@@ -183,7 +211,7 @@ public class PRM1TermSelector extends TermSelector {
 	 * @author Jun Miao 10/11/2013
 	 * **/
 	
-	private double probTermGivenDocPosition(int[] positionVector, int i, double lamda, double sigma, double colProbability){
+	private double queryTermProbabilityWithPosition(int[] positionVector, int i, double lamda, double sigma, double colProbability){
 		double probability;
 		
 		double plmProbability = propagatedCount(positionVector, i, sigma) / (2 * Math.PI * Math.pow(sigma, 2.0));
@@ -240,6 +268,7 @@ public class PRM1TermSelector extends TermSelector {
 		 */
 		double tfPerDoc[];
 		double fbDoclength[];
+		double weightPerDoc[];
 		int positionPerDoc[][] = null;
 		private double collectionProbability = -1;
 		
@@ -259,8 +288,16 @@ public class PRM1TermSelector extends TermSelector {
 			return fbDoclength[docid];
 		}
 		
-		protected void setpositionPerDoc(int[] positions, int docid){
-			positionPerDoc[docid] = positions;
+		protected void setWeightPerDoc(double docLength, int docid){
+			fbDoclength[docid] = docLength;
+		}
+		
+		protected double setWeightPerDoc(int docid){
+			return weightPerDoc[docid];
+		}
+		
+		protected void setpositionPerDoc(double weight, int docid){
+			weightPerDoc[docid] = weight;
 		}
 		
 		protected int[] getpositionPerDoc(int docid){
@@ -279,6 +316,7 @@ public class PRM1TermSelector extends TermSelector {
 		public fbTermInfo(int len) {
 			tfPerDoc = new double[len];
 			fbDoclength = new double[len];
+			weightPerDoc = new double[len];
 			positionPerDoc = new int[len][];
 		}
 	}
