@@ -29,10 +29,10 @@ import org.dutir.util.Arrays;
 
 /**
  * This is an implementation for the Positional Relevance Model variant 1
- * proposed by Yuanhua Lv & Chengxiang Zhai Paper url:
- * http://dl.acm.org/citation.cfm?id=1835546
- * 
- * @author Jun Miao
+ * proposed by Yuanhua Lv & Chengxiang Zhai Paper: 
+ * "Positional Relevance Model for Pseudo-Relevance Feedback" 
+ * @see http://dl.acm.org/citation.cfm?id=1835546
+ * @author Jun Miao 
  * 
  */
 public class PRM1TermSelector extends TermSelector {
@@ -385,82 +385,4 @@ public class PRM1TermSelector extends TermSelector {
 
 	}
 
-	private class fbTermInfo {
-		/**
-		 * Information of feedback terms, including tf in each feedback
-		 * document, feedback document length, collection probability and
-		 * position vectors in all feedback documents Jun Miao 10/11/2013
-		 */
-		protected int docNumber;
-		private int docIds[];
-		private double tfPerDoc[];
-		private double fbDoclength[];
-		private double weightPerDoc[];
-		private int positionPerDoc[][] = null;
-		private double collectionProbability = -1;
-		
-		protected void setdocIds(int docId, int index) {
-			docIds[index] = docId;
-		}
-
-		protected double getdocIds(int index) {
-			return docIds[index];
-		}
-
-		protected void setTfPerDoc(double tf, int index) {
-			tfPerDoc[index] = tf;
-		}
-
-		protected double getTfPerDoc(int index) {
-			return tfPerDoc[index];
-		}
-
-		protected void setfbDocLength(double docLength, int index) {
-			fbDoclength[index] = docLength;
-		}
-
-		protected double getfbDocLength(int index) {
-			return fbDoclength[index];
-		}
-
-		protected void setWeightPerDoc(double weight, int index) {
-			weightPerDoc[index] = weight;
-		}
-
-		protected double getWeightPerDoc(int index) {
-			return weightPerDoc[index];
-		}
-
-		protected void setpositionPerDoc(int[] positions, int index) {
-			positionPerDoc[index] = positions;
-		}
-
-		protected int[] getpositionPerDoc(int index) {
-			return positionPerDoc[index];
-		}
-
-		protected void setcollectionProbability(double colprobability) {
-			collectionProbability = colprobability;
-		}
-
-		protected double getcollectionProbability() {
-			return collectionProbability;
-		}
-
-		public fbTermInfo(int len) {
-			docIds = new int[len];
-			tfPerDoc = new double[len];
-			fbDoclength = new double[len];
-			weightPerDoc = new double[len];
-			positionPerDoc = new int[len][];
-			java.util.Arrays.fill(docIds, 0);
-			java.util.Arrays.fill(tfPerDoc, 0);
-			java.util.Arrays.fill(fbDoclength, 0);
-			java.util.Arrays.fill(weightPerDoc, 0);
-			docNumber = len;
-			
-			
-		}
-	}
-
-}
+	
