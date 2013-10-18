@@ -55,8 +55,8 @@ public class PRM1TermSelector extends TermSelector {
 		}
 	}
 
-	static double lamda = Double.parseDouble(ApplicationSetup.getProperty(
-			"prmJM.lamda", "0.5"));
+	static double lambda = Double.parseDouble(ApplicationSetup.getProperty(
+			"prmJM.lambda", "0.5"));
 	
 	static double sigma = Double.parseDouble(ApplicationSetup.getProperty(
 			"guassian.sigma", "0.5"));
@@ -72,7 +72,7 @@ public class PRM1TermSelector extends TermSelector {
 	 * 
 	 * @param queryTermMap The HashMap which contains the information of all original query terms
 	 * 
-	 * @lamda The tune parameter for JM smoothing in calling queryTermProbabilityWithPosition() method
+	 * @lambda The tune parameter for JM smoothing in calling queryTermProbabilityWithPosition() method
 	 * 
 	 * @param sigma The parameter for the Guassian kernel in calling queryTermProbabilityWithPosition() method
 	 * 
@@ -82,14 +82,14 @@ public class PRM1TermSelector extends TermSelector {
 	 * 
 	 * @author Jun Miao 10/15/2013 *
 	 */
-	private double score(fbTermInfo fbTerm, HashMap<String, fbTermInfo> queryTermMap, double sigma,
-			double lamda, int index) {
+	private double score(FbTermInfo fbTerm, HashMap<String, FbTermInfo> queryTermMap, double sigma,
+			double lambda, int index) {
 
 		double returnScore = 0.0;
 		
 		int [] positions = fbTerm.getpositionPerDoc(index);
 		for (int i = 0; i < positions.length; i++){
-			returnScore += probQueryWithPositions(queryTermMap, positions[i], sigma, lamda, index);
+			returnScore += probQueryWithPositions(queryTermMap, positions[i], sigma, lambda, index);
 		}
 		returnScore = returnScore / fbTerm.getfbDocLength(index);
 		
@@ -126,14 +126,14 @@ public class PRM1TermSelector extends TermSelector {
 		String sterms[][] = new String[docids.length][];
 		int termFreqs[][] = new int[docids.length][];
 
-		HashMap<String, fbTermInfo> feedbackTermMap = new HashMap<String, fbTermInfo>();
-		HashMap<String, fbTermInfo> queryTermMap = new HashMap<String, fbTermInfo>();
+		HashMap<String, FbTermInfo> feedbackTermMap = new HashMap<String, FbTermInfo>();
+		HashMap<String, FbTermInfo> queryTermMap = new HashMap<String, FbTermInfo>();
 		
 		
 		// get all terms in feedback documents as candidate expansion terms
 		
-		for (int i = 0; i < docids.length; i++) {
-			int docid = docids[i];
+		for (int fbDocIndex = 0; fbDocIndex < docids.length; fbDocIndex++) {
+			int docid = docids[fbDocIndex];
 			TermPositionVector tfv = null;
 			try {
 				tfv = (TermPositionVector) this.searcher.getIndexReader()
@@ -147,21 +147,21 @@ public class PRM1TermSelector extends TermSelector {
 			else {
 				String strterms[] = tfv.getTerms();
 				int freqs[] = tfv.getTermFrequencies();
-				float dl = Arrays.sum(freqs);
-				docLens[i] = dl;
+				int dl = Arrays.sum(freqs);
+				docLens[fbDocIndex] = dl;
 				//feedbackSetLength += dl;
 
 				//Get all the relative information and store it in the two HashMaps
 				for (int j = 0; j < strterms.length; j++) {
-					fbTermInfo fbTerm = feedbackTermMap.get(strterms[j]);
+					FbTermInfo fbTerm = feedbackTermMap.get(strterms[j]);
 					if (fbTerm == null) {
-						fbTerm = new fbTermInfo(docids.length);
-						fbTerm.setdocIds(docids[i], i);
+						fbTerm = new FbTermInfo(docids.length);
+						fbTerm.setdocIds(docids[fbDocIndex], fbDocIndex);
 						Item item = getItem(strterms[j]);
 						fbTerm.setcollectionProbability(item.ctf);
-						fbTerm.setpositionPerDoc(tfv.getTermPositions(j), i);
-						fbTerm.setfbDocLength(dl, i);
-						fbTerm.setTfPerDoc(freqs[j], i);
+						fbTerm.setpositionPerDoc(tfv.getTermPositions(j), fbDocIndex);
+						fbTerm.setfbDocLength(dl, fbDocIndex);
+						fbTerm.setTfPerDoc(freqs[j], fbDocIndex);
 						feedbackTermMap.put(strterms[j], fbTerm);
 						
 						if (this.originalQueryTermidSet.contains(strterms[j]))
@@ -173,11 +173,11 @@ public class PRM1TermSelector extends TermSelector {
 				
 				//set term scores in each doc by applying position information
 				for (int j = 0; j < strterms.length; j++) {
-					fbTermInfo fbterm = feedbackTermMap.get(strterms[j]);
+					FbTermInfo fbterm = feedbackTermMap.get(strterms[j]);
 					if (fbterm != null){
 						double positionalScore = 0;
-						positionalScore = score(fbterm, queryTermMap, sigma, lamda, docid);
-						fbterm.setWeightPerDoc(positionalScore, docid);
+						positionalScore = score(fbterm, queryTermMap, sigma, lambda, fbDocIndex);
+						fbterm.setWeightPerDoc(positionalScore, fbDocIndex);
 						feedbackTermMap.put(strterms[j], fbterm);
 						
 					}
@@ -199,9 +199,9 @@ public class PRM1TermSelector extends TermSelector {
 		float total = 0;
 		int fbTermCount = 0;
 		float sum = 0;
-		for (Entry<String, fbTermInfo> entry : feedbackTermMap.entrySet()) {
+		for (Entry<String, FbTermInfo> entry : feedbackTermMap.entrySet()) {
 			String w = entry.getKey();
-			fbTermInfo fbTerm = entry.getValue();
+			FbTermInfo fbTerm = entry.getValue();
 			float weight = 0;
 			for (int i = 0; i < fbTerm.docNumber; i++) {
 				weight += fbTerm.getWeightPerDoc(i);
@@ -270,7 +270,7 @@ public class PRM1TermSelector extends TermSelector {
 	 * 
 	 * @param i The position which feedback term w can associate
 	 * 
-	 * @lamda The tune parameter for JM smoothing in calling
+	 * @lambda The tune parameter for JM smoothing in calling
 	 * queryTermProbabilityWithPosition() method
 	 * 
 	 * @param sigma The parameter for the Guassian kernel in calling
@@ -285,21 +285,21 @@ public class PRM1TermSelector extends TermSelector {
 	 */
 
 	private double probQueryWithPositions(
-			HashMap<String, fbTermInfo> queryTermMap, int i, double lamda,
-			double sigma, int docid) {
+			HashMap<String, FbTermInfo> queryTermMap, int i, double lambda,
+			double sigma, int docIndex) {
 		
 		double probability = 1;
 		
-		Iterator<Map.Entry<String, fbTermInfo>> it = queryTermMap.entrySet().iterator();  
+		Iterator<Map.Entry<String, FbTermInfo>> it = queryTermMap.entrySet().iterator();  
         while (it.hasNext()) {  
-            Entry<String, fbTermInfo> entry = it.next();  
+            Entry<String, FbTermInfo> entry = it.next();  
             String fbterm = entry.getKey();
-            fbTermInfo fbterminfo = entry.getValue();
-            int []positions = fbterminfo.getpositionPerDoc(docid);
+            FbTermInfo fbterminfo = entry.getValue();
+            int []positions = fbterminfo.getpositionPerDoc(docIndex);
             double colProbability = fbterminfo.getcollectionProbability();
             
             probability *= queryTermProbabilityWithPosition(positions,
-        			i, lamda, sigma, colProbability);              
+        			i, lambda, sigma, colProbability);              
     
         }  
 		
@@ -315,7 +315,7 @@ public class PRM1TermSelector extends TermSelector {
 	 * 
 	 * @param i The position which term w can associate
 	 * 
-	 * @lamda The tune parameter for JM smoothing
+	 * @lambda The tune parameter for JM smoothing
 	 * 
 	 * @param sigma The parameter for the Guassian kernel
 	 * 
@@ -328,12 +328,12 @@ public class PRM1TermSelector extends TermSelector {
 	 */
 
 	private double queryTermProbabilityWithPosition(int[] positionVector,
-			int i, double lamda, double sigma, double colProbability) {
+			int i, double lambda, double sigma, double colProbability) {
 		double probability;
 
 		double plmProbability = propagatedCount(positionVector, i, sigma)
 				/ (2 * Math.PI * Math.pow(sigma, 2.0));
-		probability = (1 - lamda) * plmProbability + lamda * colProbability;
+		probability = (1 - lambda) * plmProbability + lambda * colProbability;
 		return probability;
 
 	}
@@ -384,5 +384,5 @@ public class PRM1TermSelector extends TermSelector {
 		// TODO Auto-generated method stub
 
 	}
-
+}
 	
