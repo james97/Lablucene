@@ -4,7 +4,7 @@
 package org.apache.lucene.postProcess.termselector;
 
 /**
- * @author Jun
+ * 
  * 
  * The fbTermInfo class is used to store Information of feedback terms, including number of feedback document,
  * document id in the index, tf in each feedback document, feedback document length, feedback term weight in each

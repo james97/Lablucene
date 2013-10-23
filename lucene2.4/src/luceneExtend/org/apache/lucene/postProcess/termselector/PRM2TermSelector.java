@@ -3,26 +3,19 @@
  */
 package org.apache.lucene.postProcess.termselector;
 
-import gnu.trove.TObjectFloatHashMap;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
-import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.index.TermPositionVector;
 import org.apache.lucene.postProcess.QueryExpansionModel;
-import org.apache.lucene.postProcess.termselector.ProxTermSelector.GeoExpansionTerm;
-import org.apache.lucene.postProcess.termselector.RM3TermSelector.Structure;
 import org.apache.lucene.search.model.Idf;
 import org.dutir.lucene.IndexUtility;
 import org.dutir.lucene.util.ApplicationSetup;
-import org.dutir.lucene.util.Rounding;
 import org.dutir.lucene.util.ExpansionTerms.ExpansionTerm;
 import org.dutir.lucene.util.TermsCache.Item;
 import org.dutir.util.Arrays;
@@ -56,26 +49,25 @@ public class PRM2TermSelector extends TermSelector {
 		}
 	}
 
-	static double dmu = Double.parseDouble(ApplicationSetup.getProperty("dlm.mu", "500"));
+	final double dmu = Double.parseDouble(ApplicationSetup.getProperty("dlm.mu", "1500"));
 	
-	static double lambda = Double.parseDouble(ApplicationSetup.getProperty(
+	final double lambda = Double.parseDouble(ApplicationSetup.getProperty(
 			"prmJM.lambda", "0.5"));
 	
-	static double sigma = Double.parseDouble(ApplicationSetup.getProperty(
+	final double sigma = Double.parseDouble(ApplicationSetup.getProperty(
 			"guassian.sigma", "0.5"));
 
 	// float numOfTokens = this.searcher.getNumTokens(field);
 
 	
-	/*
+	/**
 	 * Return the score of a feedback term with positional information in a feedback term
 	 * Implementation of the main part of Formula 6
-	 * 
 	 * @param fbTerm The object which contains relative information of a feedback term
 	 * 
 	 * @param queryTermMap The HashMap which contains the information of all original query terms
 	 * 
-	 * @lambda The tune parameter for JM smoothing in calling queryTermProbabilityWithPosition() method
+	 * @param lambda The tune parameter for JM smoothing in calling queryTermProbabilityWithPosition() method
 	 * 
 	 * @param sigma The parameter for the Guassian kernel in calling queryTermProbabilityWithPosition() method
 	 * 
@@ -83,23 +75,22 @@ public class PRM2TermSelector extends TermSelector {
 	 * 
 	 * @param queryProb The normalized P(Q|D_i)/sum{P(Q|D_i)} where D_i belongs to the feedback doc set
 	 * 
-	 * @param sumProbQryWithPos The sum of P(Q|D,i) for feedback document D
+	 * @param sumProbQryAtPos The sum of P(Q|D,i) for feedback document D
 	 * 
 	 * @return The score of a feedback term given the original query with positional information in a feedback document
 	 * 
-	 * @author Jun Miao 10/18/2013 
-	 * 
-	 * TODO: PRM2 is really sucks for the implementation... Need more improvements to make the program readable
+	 * @author Jun Miao 
+	 * @since 10/18/2013 
 	 */
-	private double score(FbTermInfo fbTerm, HashMap<String, FbTermInfo> queryTermMap, double sigma,
-			double lambda, int index, double queryProb, double sumProbQryWithPos) {
+	private double score(FbTermInfo fbTerm, HashMap<String, FbTermInfo> queryTermMap, 
+			double lambda, double sigma, int index, double queryProb, double sumProbQryAtPos) {
 
 		double returnScore = 0.0;
 		
 		int [] positions = fbTerm.getpositionPerDoc(index);
 		for (int i = 0; i < positions.length; i++){
 			
-			returnScore += queryProb * probQueryWithPositions(queryTermMap, positions[i], sigma, lambda, index) /sumProbQryWithPos;
+			returnScore += queryProb * probQueryAtPos(queryTermMap, positions[i], lambda, sigma, index) /sumProbQryAtPos;
 		}
 		
 		return returnScore;
@@ -118,10 +109,6 @@ public class PRM2TermSelector extends TermSelector {
 	public void assignTermWeights(int[] docids, float scores[],
 			QueryExpansionModel QEModel) {
 
-		// initialize attributes of this class. termMap is used to store return
-		// feedback terms
-		// by Jun Miao 08/10/2013
-		float collectionLength = this.searcher.getNumTokens(field);
 		feedbackSetLength = 0;
 		termMap = new HashMap<String, ExpansionTerm>();
 		float docLens[] = new float[docids.length];
@@ -129,18 +116,13 @@ public class PRM2TermSelector extends TermSelector {
 		if (indexUtil == null)
 			indexUtil = new IndexUtility(this.searcher);
 		
-		// for each positive feedback document
-		// by Jun Miao 08/10/2013
-		String sterms[][] = new String[docids.length][];
-		int termFreqs[][] = new int[docids.length][];
-
 		HashMap<String, FbTermInfo> feedbackTermMap = new HashMap<String, FbTermInfo>();
 		HashMap<String, FbTermInfo> queryTermMap = new HashMap<String, FbTermInfo>();
 		
 		
 		// get all terms in feedback documents as candidate expansion terms
 		
-		for (int fbDocIndex = 0; fbDocIndex < docids.length; fbDocIndex++) {
+		for (int fbDocIndex = 0; fbDocIndex < docids.length; fbDocIndex++) { //Go through all the feedback docs and store term information
 			int docid = docids[fbDocIndex];
 			TermPositionVector tfv = null;
 			try {
@@ -158,8 +140,8 @@ public class PRM2TermSelector extends TermSelector {
 				int dl = Arrays.sum(freqs);
 				docLens[fbDocIndex] = dl;
 
-				//Get all the relative information and store it in the two HashMaps
-				for (int j = 0; j < strterms.length; j++) {
+				
+				for (int j = 0; j < strterms.length; j++) {     //Get all the relative information and store it in the two HashMaps
 					FbTermInfo fbTerm = feedbackTermMap.get(strterms[j]);
 					if (fbTerm == null) {
 						fbTerm = new FbTermInfo(docids.length);
@@ -176,37 +158,37 @@ public class PRM2TermSelector extends TermSelector {
 						
 					}
 					
-				}
+				}//Get all the relative information and store it in the two HashMaps
 				
 							
 				
 			}//end of ELSE
-		}//end of LOOP for docs
+		}//Go through all the feedback docs and store term information
 		
 		double queryProbInAllDoc = 0;
-		double [] queryProbInDoc = new double[docids.length];
+		double [] qryProbInDoc = new double[docids.length];
 		
 		
 		for (int k = 0; k < docids.length; k++){   
-			queryProbInDoc[k] = this.queryProbInDoc(queryTermMap, k, this.dmu);
-			queryProbInAllDoc += queryProbInDoc[k];					
+			qryProbInDoc[k] = this.queryProbInDoc(queryTermMap, k, this.dmu);
+			queryProbInAllDoc += qryProbInDoc[k];					
 		}//Get P(Q|D_i) and the sum of P(Q|D_i) in all feedback docs
 		
 		double [] queryPosScoreSum = new double[docids.length];;
-		for (int k = 0; k < docids.length; k++){   
+		for (int k = 0; k < docids.length; k++){   //Get sum P(Q|D,i) for each feedback document
 			queryPosScoreSum[k] = 0;
 			int docLen = 0;
 			
 			Iterator<Map.Entry<String, FbTermInfo>> it = queryTermMap.entrySet().iterator();  
 	        while (it.hasNext()) {  
 	            Entry<String, FbTermInfo> entry = it.next();  
-	            String fbterm = entry.getKey();
 	            FbTermInfo qterm = entry.getValue();
 	            docLen = qterm.getfbDocLength(k);
 	        }  
 			
+	        //This can be very time-consuming but no other ways so far
 	        for (int length = 1; length <= docLen; length++)
-	        	queryPosScoreSum[k] += probQueryWithPositions(queryTermMap, length, this.lambda, this.sigma, k); 
+	        	queryPosScoreSum[k] += probQueryAtPos(queryTermMap, length, this.lambda, this.sigma, k); 
 		}//Get sum P(Q|D,i) for each feedback document
 		
 		
@@ -225,13 +207,13 @@ public class PRM2TermSelector extends TermSelector {
 			else {
 				String strterms[] = tfv.getTerms();
 			
-			double normalizedProb =  queryProbInDoc[fbDocIndex]/queryProbInAllDoc;
+			double normalizedProb =  qryProbInDoc[fbDocIndex]/queryProbInAllDoc;
 			for (int j = 0; j < strterms.length; j++) {
 				FbTermInfo fbterm = feedbackTermMap.get(strterms[j]);
 				if (fbterm != null){
 					double positionalScore = 0;
 					
-					positionalScore = score(fbterm, queryTermMap, sigma, lambda, fbDocIndex, normalizedProb, queryPosScoreSum[fbDocIndex]);
+					positionalScore = score(fbterm, queryTermMap, this.lambda, this.sigma, fbDocIndex, normalizedProb, queryPosScoreSum[fbDocIndex]);
 					fbterm.setWeightPerDoc(positionalScore, fbDocIndex);
 					feedbackTermMap.put(strterms[j], fbterm);
 					
@@ -281,7 +263,7 @@ public class PRM2TermSelector extends TermSelector {
 			StringBuilder buf = new StringBuilder();
 			int tmpPos = 0;
 			for (int i = 0; tmpPos < 40 && i < exTerms.length; i++) {
-				if (true || exTerms[i].getWeightExpansion() < 1) {
+				if (exTerms[i].getWeightExpansion() < 1) {
 					tmpPos++;
 					buf.append(exTerms[i] + "\t");
 				}
@@ -313,7 +295,7 @@ public class PRM2TermSelector extends TermSelector {
 	}
 
 	
-	/*
+	/**
 	 * Return the query probability given a document.
 	 * 
 	 * @param queryTermMap All query terms denoted by the fbTermInfo objects
@@ -325,7 +307,8 @@ public class PRM2TermSelector extends TermSelector {
 	 * @return The query probability given the docIndex-th feedback document and a
 	 * position
 	 * 
-	 * @author Jun Miao 10/18/2013 *
+	 * @author Jun Miao 
+	 * @since 10/18/2013 
 	 */
 
 	private double queryProbInDoc(
@@ -336,7 +319,6 @@ public class PRM2TermSelector extends TermSelector {
 		Iterator<Map.Entry<String, FbTermInfo>> it = queryTermMap.entrySet().iterator();  
         while (it.hasNext()) {  
             Entry<String, FbTermInfo> entry = it.next();  
-            String fbterm = entry.getKey();
             FbTermInfo qterm = entry.getValue();
             double colProbability = qterm.getcollectionProbability();
             double queryTermProb = (qterm.getTfPerDoc(docIndex) + mu * colProbability)/(qterm.getfbDocLength(docIndex));
@@ -350,7 +332,7 @@ public class PRM2TermSelector extends TermSelector {
 	
 	
 
-	/*
+	/**
 	 * Return the query probability given a document and a position.
 	 * Implementation of Formula 17 P(Q|D,i)
 	 * 
@@ -358,7 +340,7 @@ public class PRM2TermSelector extends TermSelector {
 	 * 
 	 * @param i The position which feedback term w can associate
 	 * 
-	 * @lambda The tune parameter for JM smoothing in calling
+	 * @param lambda The tune parameter for JM smoothing in calling
 	 * queryTermProbabilityWithPosition() method
 	 * 
 	 * @param sigma The parameter for the Guassian kernel in calling
@@ -372,7 +354,7 @@ public class PRM2TermSelector extends TermSelector {
 	 * @author Jun Miao 10/15/2013 *
 	 */
 
-	private double probQueryWithPositions(
+	private double probQueryAtPos(
 			HashMap<String, FbTermInfo> queryTermMap, int i, double lambda,
 			double sigma, int docIndex) {
 		
@@ -381,12 +363,11 @@ public class PRM2TermSelector extends TermSelector {
 		Iterator<Map.Entry<String, FbTermInfo>> it = queryTermMap.entrySet().iterator();  
         while (it.hasNext()) {  
             Entry<String, FbTermInfo> entry = it.next();  
-            String fbterm = entry.getKey();
             FbTermInfo fbterminfo = entry.getValue();
             int []positions = fbterminfo.getpositionPerDoc(docIndex);
             double colProbability = fbterminfo.getcollectionProbability();
             
-            probability *= queryTermProbabilityWithPosition(positions,
+            probability *= queryTermProbAtPos(positions,
         			i, lambda, sigma, colProbability);              
     
         }  
@@ -394,7 +375,7 @@ public class PRM2TermSelector extends TermSelector {
         return probability;
 	}
 
-	/*
+	/**
 	 * Return the smoothed probability of a term w appearing at position i in a
 	 * feedback document based on positional language model (plm).
 	 * Implementation of Formula 16
@@ -403,7 +384,7 @@ public class PRM2TermSelector extends TermSelector {
 	 * 
 	 * @param i The position which term w can associate
 	 * 
-	 * @lambda The tune parameter for JM smoothing
+	 * @param lambda The tune parameter for JM smoothing
 	 * 
 	 * @param sigma The parameter for the Guassian kernel
 	 * 
@@ -412,21 +393,22 @@ public class PRM2TermSelector extends TermSelector {
 	 * @return The smoothed probability of a term w appearing at position i in a
 	 * feedback document
 	 * 
-	 * @author Jun Miao 10/11/2013 *
+	 * @author Jun Miao 
+	 * @since 10/11/2013 
 	 */
 
-	private double queryTermProbabilityWithPosition(int[] positionVector,
+	private double queryTermProbAtPos(int[] positionVector,
 			int i, double lambda, double sigma, double colProbability) {
 		double probability;
 
 		double plmProbability = propagatedCount(positionVector, i, sigma)
-				/ (2 * Math.PI * Math.pow(sigma, 2.0));
+				/ Math.sqrt((2 * Math.PI * Math.pow(sigma, 2.0)));
 		probability = (1 - lambda) * plmProbability + lambda * colProbability;
 		return probability;
 
 	}
 
-	/*
+	/**
 	 * Return the total propagated count of term w at position i from the
 	 * occurrences of w in all the positions. An implementation of c'(w,i) and
 	 * Gaussian kernel is used. Implementation of Formula 13
@@ -448,8 +430,8 @@ public class PRM2TermSelector extends TermSelector {
 
 		double count = 0;
 		for (int j = 0; j < positionVector.length; j++) {
-			count += Math.exp(-Math.pow(
-					(i - positionVector[j]) / (2 * Math.pow(sigma, 2.0)), 2.0));
+			count += Math.exp(-Math.pow(i - positionVector[j], 2.0) 
+					/ (2 * Math.pow(sigma, 2.0)));
 		}
 		return count;
 
