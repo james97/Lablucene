@@ -132,20 +132,20 @@ public class PRM1TermSelector extends TermSelector {
 				//Get all the relative information and store it in the two HashMaps
 				for (int j = 0; j < strterms.length; j++) {
 					FbTermInfo fbTerm = feedbackTermMap.get(strterms[j]);
-					if (fbTerm == null) {
+					if (fbTerm == null) 
 						fbTerm = new FbTermInfo(docids.length);
-						fbTerm.setdocIds(docids[fbDocIndex], fbDocIndex);
-						Item item = getItem(strterms[j]);
-						fbTerm.setcollectionProbability(item.ctf);
-						fbTerm.setpositionPerDoc(tfv.getTermPositions(j), fbDocIndex);
-						fbTerm.setfbDocLength(dl, fbDocIndex);
-						fbTerm.setTfPerDoc(freqs[j], fbDocIndex);
-						feedbackTermMap.put(strterms[j], fbTerm);
+					fbTerm.setdocIds(docids[fbDocIndex], fbDocIndex);
+					Item item = getItem(strterms[j]);
+					fbTerm.setcollectionProbability(item.ctf);
+					fbTerm.setpositionPerDoc(tfv.getTermPositions(j), fbDocIndex);
+					fbTerm.setfbDocLength(dl, fbDocIndex);
+					fbTerm.setTfPerDoc(freqs[j], fbDocIndex);
+					feedbackTermMap.put(strterms[j], fbTerm);
 						
-						if (this.originalQueryTermidSet.contains(strterms[j]))
-							queryTermMap.put(strterms[j], fbTerm);
+					if (this.originalQueryTermidSet.contains(strterms[j]))
+						queryTermMap.put(strterms[j], fbTerm);
 						
-					}
+					
 					
 				}
 				
@@ -269,6 +269,14 @@ public class PRM1TermSelector extends TermSelector {
             FbTermInfo fbterminfo = entry.getValue();
             int []positions = fbterminfo.getpositionPerDoc(docIndex);
             double colProbability = fbterminfo.getcollectionProbability();
+            
+            //Query terms may not appear in a document, so the positions vector can be null
+            //Just set it to the smoothed colProbability, otherwise queryTermProbAtPos will have
+            //NullPointerExceptions.
+            if(positions == null){
+            	probability *= colProbability*lambda;
+            	continue;
+            }
             
             probability *= queryTermProbAtPos(positions,
         			i, lambda, sigma, colProbability);              
