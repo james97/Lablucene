@@ -273,6 +273,7 @@ public class PRM1TermSelector extends TermSelector {
             //Query terms may not appear in a document, so the positions vector can be null
             //Just set it to the smoothed colProbability, otherwise queryTermProbAtPos will have
             //NullPointerExceptions.
+            //Added by Jun Miao Nov.15, 2013
             if(positions == null){
             	probability *= colProbability*lambda;
             	continue;

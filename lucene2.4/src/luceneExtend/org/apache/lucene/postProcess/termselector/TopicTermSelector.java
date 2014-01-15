@@ -28,10 +28,13 @@ import org.dutir.util.symbol.MapSymbolTable;
 import org.dutir.util.symbol.SymbolTable;
 
 /**
- * @author yezheng
+ * This is based on the TopicTermSelector implemented by Zheng Ye
+ * The purpose of this selector is to try different strategies when
+ * the topics are fixed. E.g., PMI, word2vec, cosine similarity of 
+ * term probability distribution in all topics...
+ * @author Jun Miao 
  * 
  */
-
 public class TopicTermSelector extends TermSelector {
 	private static Logger logger = Logger.getLogger(TopicTermSelector.class);
 	static boolean LanguageModel = Boolean.parseBoolean(ApplicationSetup
@@ -133,7 +136,9 @@ public class TopicTermSelector extends TermSelector {
 			else {
 				String strterms[] = tfv.getTerms();
 				int freqs[] = tfv.getTermFrequencies();
+				//termCache is a doc/term matrix
 				termCache[i] = strterms;
+				//termFreq is a doc/termFrequency matrix
 				termFreq[i] = freqs;
 			}
 		}
@@ -141,6 +146,7 @@ public class TopicTermSelector extends TermSelector {
 		// //////////LDA clustering/////////////////////
 		MapSymbolTable SYMBOL_TABLE = new MapSymbolTable();
 		int[][] DOC_WORDS = new int[docids.length][];
+		//querytermid is a 
 		int querytermid[] = new int[this.originalQueryTermidSet.size()];
 		int pos = 0;
 		int backids[] = new int[0];
@@ -331,7 +337,7 @@ public class TopicTermSelector extends TermSelector {
 		int maxQueryTermId = querytermid[querytermid.length - 1];
 
 		if (strategy == 1) { // take advantage of the topic with the highest
-								// prob
+								// prob. The same as in TopicTermSelector.
 			float totalweight = 0;
 			int feedbackNum = sample.numDocuments();
 			for (int i = 0; i < len; i++) {
@@ -342,6 +348,11 @@ public class TopicTermSelector extends TermSelector {
 				float weight = 0;
 
 				weight = 0;
+				
+				//apply topic probability to smooth the within doc probability
+				// and then use it to replace the original tf/dl as the first
+				//argument in QEModel.score. Finally, rerank the terms according
+				//to their weights
 				for (int d = 0; d < feedbackNum; d++) {
 					double docProb = sample.docWordCount(d, i)
 							/ (float) sample.documentLength(d);
@@ -373,300 +384,8 @@ public class TopicTermSelector extends TermSelector {
 							/ totalweight);
 				}
 			}
-		} else if (strategy == 2) {// take advantage of the topics with the
-									// probabilities higher than a threshold
-			float totalweight = 0;
-			int feedbackNum = sample.numDocuments();
-			for (int i = 0; i < len; i++) {
-
-				String term = SYMBOL_TABLE.idToSymbol(i);
-				TermsCache.Item item = getItem(term);
-				float TF = item.ctf;float DF = item.df;
-				float weight = 0;
-
-				weight = 0;
-				for (int d = 0; d < sample.numDocuments(); d++) {
-					double docProb = sample.docWordCount(d, i)
-							/ (float) sample.documentLength(d);
-					if (docProb == 0) {
-						continue;
-					}
-
-					double topicProb = sample.docWordProb(d, i, theta,
-							threshold);
-					double onedocWeight = (1 - beta) * docProb + beta
-							* topicProb;
-					QEModel.setTotalDocumentLength(1);
-					
-					weight += QEModel.score((float) onedocWeight, TF, DF);
-				}
-
-				weight /= feedbackNum;
-				if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
-					weight = 0;
-				}
-				allTerms[i] = new ExpansionTerm(term, 0);
-				allTerms[i].setWeightExpansion(weight);
-				this.termMap.put(term, allTerms[i]);
-				totalweight += weight;
-			}
-
-			java.util.Arrays.sort(allTerms);
-			// determine double normalizing factor
-			float normaliser = allTerms[0].getWeightExpansion();
-			for (ExpansionTerm term : allTerms) {
-				if (normaliser != 0) {
-					term.setWeightExpansion(term.getWeightExpansion()
-							/ totalweight);
-				}
-			}
-		} else if (strategy == 3) {// adding term association
-			float totalweight = 0;
-			int feedbackNum = sample.numDocuments();
-			int times = 10;
-			float thetas[][] = sampleThetas(times, NUM_TOPICS, lda, querytermid);
-
-			for (int i = 0; i < len; i++) {
-				String term = SYMBOL_TABLE.idToSymbol(i);
-				TermsCache.Item item = getItem(term);
-				float TF = item.ctf;float DF = item.df;
-				float weight = 0;
-
-				weight = 0;
-				for (int d = 0; d < feedbackNum; d++) {
-					double docProb = sample.docWordCount(d, i)
-							/ (float) sample.documentLength(d);
-					// if(docProb ==0){
-					// continue;
-					// }
-
-					double topicProb = sample.docWordProb(i, thetas);
-
-					double onedocWeight = (1 - beta) * docProb + beta
-							* topicProb;
-					QEModel.setTotalDocumentLength(1);
-					weight += QEModel.score((float) onedocWeight, TF, DF);
-				}
-
-				weight /= feedbackNum;
-				if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
-					weight = 0;
-				}
-				allTerms[i] = new ExpansionTerm(term, 0);
-				allTerms[i].setWeightExpansion(weight);
-				this.termMap.put(term, allTerms[i]);
-				totalweight += weight;
-			}
-
-			java.util.Arrays.sort(allTerms);
-			// determine double normalizing factor
-			float normaliser = allTerms[0].getWeightExpansion();
-			for (ExpansionTerm term : allTerms) {
-				if (normaliser != 0) {
-					term.setWeightExpansion(term.getWeightExpansion()
-							/ totalweight);
-				}
-			}
-		} else if (strategy == 4) {// relevance model alike
-			float totalweight = 0;
-			int feedbackNum = sample.numDocuments();
-			int times = 10;
-			float thetas[][] = sampleThetas(times, NUM_TOPICS, lda, querytermid);
-
-			for (int i = 0; i < len; i++) {
-				String term = SYMBOL_TABLE.idToSymbol(i);
-				TermsCache.Item item = getItem(term);
-				float TF = item.ctf;
-				float DF = item.df;
-				float tf = sample.wordCount(i);
-				float tokens = sample.numTokens();
-				QEModel.setDocumentFrequency(tokens);
-				float pt = QEModel.score(tf, TF, DF);
-				float weight = pt;
-				for (int qi = 0; qi < querytermid.length; qi++) {
-
-					for (int ti = 0; ti < NUM_TOPICS; ti++) {
-
-					}
-				}
-
-				weight /= feedbackNum;
-				if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
-					weight = 0;
-				}
-				allTerms[i] = new ExpansionTerm(term, 0);
-				allTerms[i].setWeightExpansion(weight);
-				this.termMap.put(term, allTerms[i]);
-				totalweight += weight;
-			}
-
-			java.util.Arrays.sort(allTerms);
-			// determine double normalizing factor
-			float normaliser = allTerms[0].getWeightExpansion();
-			for (ExpansionTerm term : allTerms) {
-				if (normaliser != 0) {
-					term.setWeightExpansion(term.getWeightExpansion()
-							/ totalweight);
-				}
-			}
-		} else if (strategy == 5) { // take advantage of the topic with the
-									// highest prob
-			float totalweight = 0;
-			int feedbackNum = sample.numDocuments();
-			for (int i = 0; i < len; i++) {
-				String term = SYMBOL_TABLE.idToSymbol(i);
-				TermsCache.Item item = getItem(term);
-				float TF = item.ctf;
-				float DF = item.df;
-				float weight = 0;
-
-				weight = 0;
-				for (int d = 0; d < feedbackNum; d++) {
-
-					double docProb = 0;
-					// docProb= sample.docWordCount(d, i)/
-					// (float)sample.documentLength(d);
-					docProb = score(sample.docWordCount(d, i), sample
-							.documentLength(d), TF, QEModel
-							.getCollectionLength());
-					// docProb = (1-beta) * sample.docWordCount(d, i)/
-					// (float)sample.documentLength(d) + beta *
-					// TF/QEModel.getCollectionLength();
-					weight += sample.documentTopicProb(d, maxTopic) * docProb
-							* dscores[d];
-				}
-				QEModel.setTotalDocumentLength(1);
-				weight = QEModel.score(weight, TF, DF);
-
-				if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
-					weight = 0;
-				}
-				allTerms[i] = new ExpansionTerm(term, 0);
-				allTerms[i].setWeightExpansion(weight);
-				this.termMap.put(term, allTerms[i]);
-				totalweight += weight;
-			}
-			java.util.Arrays.sort(allTerms);
-			for (ExpansionTerm term : allTerms) {
-				term
-						.setWeightExpansion(term.getWeightExpansion()
-								/ totalweight);
-			}
-		} else if (strategy == 6) { // take advantage of the topic with the
-									// highest prob
-			float totalweight = 0;
-			int feedbackNum = sample.numDocuments();
-			for (int i = 0; i < len; i++) {
-				String term = SYMBOL_TABLE.idToSymbol(i);
-				TermsCache.Item item = getItem(term);
-				float TF = item.ctf;
-				float DF = item.df;
-				float weight = 0;
-
-				weight = 0;
-				for (int d = 0; d < feedbackNum; d++) {
-					double docProb = 0;
-					// docProb= sample.docWordCount(d, i)/
-					// (float)sample.documentLength(d);
-					docProb = score(sample.docWordCount(d, i), sample
-							.documentLength(d), TF, QEModel
-							.getCollectionLength());
-					// docProb = (1-beta) * sample.docWordCount(d, i)/
-					// (float)sample.documentLength(d) + beta *
-					// TF/QEModel.getCollectionLength();
-					float norm = 0;
-					for (int ti = 0; ti < index.length; ti++) {
-						if (theta[index[ti]] > threshold) {
-							weight += sample.documentTopicProb(d, index[ti])
-									* docProb * dscores[d];
-						}
-					}
-					if(weight == Float.NaN){
-						System.exit(0);
-					}
-					// weight += sample.documentTopicProb(d, maxTopic) * docProb
-					// * dscores[d];
-				}
-				QEModel.setTotalDocumentLength(1);
-				weight = QEModel.score(weight, TF, DF);
-
-				if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
-					weight = 0;
-				}
-				allTerms[i] = new ExpansionTerm(term, 1);
-				allTerms[i].setWeightExpansion(weight);
-				this.termMap.put(term, allTerms[i]);
-				totalweight += weight;
-			}
-			java.util.Arrays.sort(allTerms);
-			for (ExpansionTerm term : allTerms) {
-				term
-						.setWeightExpansion(term.getWeightExpansion()
-								/ totalweight);
-			}
-		} else if (strategy == 7) {// adding term association
-			float totalweight = 0;
-			int feedbackNum = sample.numDocuments();
-			int times = 10;
-			float thetas[] = sampleThetasAver(times, NUM_TOPICS, lda,
-					querytermid);
-
-			float doctopics[][] = new float[feedbackNum][NUM_TOPICS];
-			for (int d = 0; d < feedbackNum; d++) {
-				for(int ti=0; ti < NUM_TOPICS; ti++){
-					doctopics[d][ti] =  (float) sample.documentTopicProb(d, ti);
-				}
-			}
+		} else if (strategy == 2){
 			
-			for (int i = 0; i < len; i++) {
-				String term = SYMBOL_TABLE.idToSymbol(i);
-				TermsCache.Item item = getItem(term);
-				float TF = item.ctf;
-				float DF = item.df;
-				float weight = 0;
-
-				// for(int oi =0; oi < thetas.length; oi++){
-
-				weight = 0;
-				for (int d = 0; d < feedbackNum; d++) {
-					double docProb = 0;
-					// docProb = sample.docWordCount(d, i)/
-					// (float)sample.documentLength(d);
-					docProb = score(sample.docWordCount(d, i), sample
-							.documentLength(d), TF, QEModel
-							.getCollectionLength());
-					float subweight = 0;
-					for (int zi = 0; zi < thetas.length; zi++) {
-						float pzi = thetas[zi]; // p(z_i | \theta)
-						subweight += pzi * doctopics[d][zi] * docProb
-								* dscores[d];
-					}
-					weight +=  subweight;
-				}
-
-				// }
-
-				QEModel.setTotalDocumentLength(1);
-				weight = QEModel.score(weight, TF, DF);
-
-				if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
-					weight = 0;
-				}
-				allTerms[i] = new ExpansionTerm(term, 0);
-				allTerms[i].setWeightExpansion(weight);
-				this.termMap.put(term, allTerms[i]);
-				totalweight += weight;
-			}
-
-			java.util.Arrays.sort(allTerms);
-			// determine double normalizing factor
-			float normaliser = allTerms[0].getWeightExpansion();
-			for (ExpansionTerm term : allTerms) {
-				if (normaliser != 0) {
-					term.setWeightExpansion(term.getWeightExpansion()
-							/ totalweight);
-				}
-			}
 		}
 		return allTerms;
 	}

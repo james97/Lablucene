@@ -4,26 +4,26 @@
 	<classpathentry kind="src" path="src/luceneExtend"/>
 	<classpathentry kind="src" path="src/application"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/activation.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/barrister-0.1.8.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/bzip2.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/commons-httpclient-3.1.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/commons-math-2.1.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/DUTLIB.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/hadoop18.2-joined.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/jackson-core-asl-1.9.7.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/jackson-mapper-asl-1.9.7.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/jsonic-1.2.5.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/LabLucene1.0.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/langdetect.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/libsvm.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/lingpipe-3.8.0.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/log4j-1.2.9.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/nekohtml-0.9.4.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/tar.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/trove-2.0.2.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/weka.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/xerces-2_6_2-apis.jar"/>
-	<classpathentry kind="lib" path="/Users/James/Documents/Projects/Github/lucene2.4/lib/xerces-2_6_2.jar"/>
+	<classpathentry kind="lib" path="lib/activation.jar"/>
+	<classpathentry kind="lib" path="lib/barrister-0.1.8.jar"/>
+	<classpathentry kind="lib" path="lib/bzip2.jar"/>
+	<classpathentry kind="lib" path="lib/commons-httpclient-3.1.jar"/>
+	<classpathentry kind="lib" path="lib/commons-math-2.1.jar"/>
+	<classpathentry kind="lib" path="lib/DUTLIB.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop18.2-joined.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-core-asl-1.9.7.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-mapper-asl-1.9.7.jar"/>
+	<classpathentry kind="lib" path="lib/jsonic-1.2.5.jar"/>
+	<classpathentry kind="lib" path="lib/LabLucene1.0.jar"/>
+	<classpathentry kind="lib" path="lib/langdetect.jar"/>
+	<classpathentry kind="lib" path="lib/libsvm.jar"/>
+	<classpathentry kind="lib" path="lib/lingpipe-3.8.0.jar"/>
+	<classpathentry kind="lib" path="lib/log4j-1.2.9.jar"/>
+	<classpathentry kind="lib" path="lib/nekohtml-0.9.4.jar"/>
+	<classpathentry kind="lib" path="lib/tar.jar"/>
+	<classpathentry kind="lib" path="lib/trove-2.0.2.jar"/>
+	<classpathentry kind="lib" path="lib/weka.jar"/>
+	<classpathentry kind="lib" path="lib/xerces-2_6_2-apis.jar"/>
+	<classpathentry kind="lib" path="lib/xerces-2_6_2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
