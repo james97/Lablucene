@@ -3,12 +3,9 @@
  */
 package org.apache.lucene.postProcess.termselector;
 
-import gnu.trove.TIntHashSet;
 import gnu.trove.TObjectIntHashMap;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,8 +15,9 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
 
-import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
+import org.apache.commons.math.stat.descriptive.moment.StandardDeviation;
 import org.apache.log4j.Logger;
+import org.apache.lucene.MetricsUtils;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
@@ -29,13 +27,16 @@ import org.apache.lucene.postProcess.QueryExpansionModel;
 import org.apache.lucene.postProcess.termselector.LatentDirichletAllocation.GibbsSample;
 import org.apache.lucene.search.model.Idf;
 import org.dutir.lucene.util.ApplicationSetup;
+import org.dutir.lucene.util.ExpansionTerms.ExpansionTerm;
 import org.dutir.lucene.util.Rounding;
 import org.dutir.lucene.util.TermsCache;
-import org.dutir.lucene.util.ExpansionTerms.ExpansionTerm;
 import org.dutir.util.Arrays;
 import org.dutir.util.Normalizer;
 import org.dutir.util.symbol.MapSymbolTable;
 import org.dutir.util.symbol.SymbolTable;
+
+
+
 
 
 /**
@@ -92,7 +93,7 @@ public class TopicBasedTermSelector extends TermSelector {
 
 	TObjectIntHashMap<String> dfMap = null;
 
-	public TopicBasedTermSelector() {
+	public TopicBasedTermSelector() throws IOException {
 		super();
 		this.setMetaInfo("normalize.weights", "true");
 		this.EXPANSION_MIN_DOCUMENTS = Integer.parseInt(ApplicationSetup
@@ -137,16 +138,16 @@ public class TopicBasedTermSelector extends TermSelector {
 			indriNorm(dscores);
 		}
 		Normalizer.norm2(dscores);
-		// logger.info("sum of doc weights:" + Arrays.sum(dscores));
-		// Normalizer.norm_MaxMin_0_1(dscores);
-		// if(logger.isInfoEnabled())
-		// {
-		// StringBuffer buf = new StringBuffer();
-		// for(int i=0; i < dscores.length; i++){
-		// buf.append("" + dscores[i] + ", ");
-		// }
-		// logger.info("4.doc weights:" + buf.toString());
-		// }
+        logger.info("sum of doc weights:" + Arrays.sum(dscores));
+        Normalizer.norm_MaxMin_0_1(dscores); //normalized doc scores
+        if (logger.isInfoEnabled())
+        {
+            StringBuffer buf = new StringBuffer();
+            for (int i = 0; i < dscores.length; i++) {
+                buf.append("" + dscores[i] + ", ");
+            }
+            logger.info("4.doc weights:" + buf.toString());
+        }
 		String[][] termCache = null;
 		int[][] termFreq = null;
 		termMap = new HashMap<String, ExpansionTerm>();
@@ -576,108 +577,96 @@ public class TopicBasedTermSelector extends TermSelector {
 		} else if (strategy == 4) { // add by Jun Miao
 			// take advantage of word2Vec
 
-			try {
-				float totalweight = 0;
-				int feedbackNum = sample.numDocuments();
-				for (int i = 0; i < len; i++) {
-					String term = SYMBOL_TABLE.idToSymbol(i);
-					TermsCache.Item item = getItem(term);
-					float TF = item.ctf;
-					float DF = item.df;
-					float weight = 0;
-					IndexReader ir = this.searcher.getIndexReader();
-					int docInColl = ir.numDocs();
-					// get query terms
-					Iterator it = originalQueryTermidSet.iterator();
-					String[] qterms = new String[originalQueryTermidSet.size()];
-					int qCount = 0;
-					while (it.hasNext()) {
-						qterms[qCount] = (String) it.next();
-						qCount++;
-					}
+			float totalweight = 0;
+            int feedbackNum = sample.numDocuments();
+            for (int i = 0; i < len; i++) {
+            	String term = SYMBOL_TABLE.idToSymbol(i);
+            	TermsCache.Item item = getItem(term);
+            	float TF = item.ctf;
+            	float DF = item.df;
+            	float weight = 0;
+            	IndexReader ir = this.searcher.getIndexReader();
+            	int docInColl = ir.numDocs();
+            	// get query terms
+            	Iterator it = originalQueryTermidSet.iterator();
+            	String[] qterms = new String[originalQueryTermidSet.size()];
+            	int qCount = 0;
+            	while (it.hasNext()) {
+            		qterms[qCount] = (String) it.next();
+            		qCount++;
+            	}
 
-					//calculate the weight of a feedback term based on it's word2vec
-					//similarity to query terms
-					float [] termVector = this.vectorOfTerms.get(term);
-					for (int t = 0; t < qterms.length; t++){
-						float [] qtermVector = this.vectorOfTerms.get(qterms[t]);
-						weight += cosine_similarity(termVector, qtermVector);
-					}
-						weight /= qterms.length;
+            	//calculate the weight of a feedback term based on it's word2vec
+            	//similarity to query terms
+            	float [] termVector = this.vectorOfTerms.get(term);
+            	for (int t = 0; t < qterms.length; t++){
+            		float [] qtermVector = this.vectorOfTerms.get(qterms[t]);
+            		weight += cosine_similarity(termVector, qtermVector);
+            	}
+            		weight /= qterms.length;
 
-					if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
-						weight = 0;
-					}
-					allTerms[i] = new ExpansionTerm(term, 0);
-					allTerms[i].setWeightExpansion(weight);
-					this.termMap.put(term, allTerms[i]);
-					totalweight += weight;
-				}
+            	if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
+            		weight = 0;
+            	}
+            	allTerms[i] = new ExpansionTerm(term, 0);
+            	allTerms[i].setWeightExpansion(weight);
+            	this.termMap.put(term, allTerms[i]);
+            	totalweight += weight;
+            }
 
-				java.util.Arrays.sort(allTerms);
-				// determine double normalizing factor
-				float normaliser = allTerms[0].getWeightExpansion();
-				for (ExpansionTerm term : allTerms) {
-					if (normaliser != 0) {
-						term.setWeightExpansion(term.getWeightExpansion()
-								/ totalweight);
-					}
-				}
-
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+            java.util.Arrays.sort(allTerms);
+            // determine double normalizing factor
+            float normaliser = allTerms[0].getWeightExpansion();
+            for (ExpansionTerm term : allTerms) {
+            	if (normaliser != 0) {
+            		term.setWeightExpansion(term.getWeightExpansion()
+            				/ totalweight);
+            	}
+            }
 
 		}else if (strategy == 5) { // add by Jun Miao
 			// compare the probability distribution of query terms and 
 			//candidate feedback terms.
 
-			try {
-				float totalweight = 0;
-				int feedbackNum = sample.numDocuments();
-				for (int i = 0; i < len; i++) {
-					String term = SYMBOL_TABLE.idToSymbol(i);
-					TermsCache.Item item = getItem(term);
-					float TF = item.ctf;
-					float DF = item.df;
-					float weight = 0;
-					IndexReader ir = this.searcher.getIndexReader();
-					int docInColl = ir.numDocs();
-					// get query terms
-					Iterator it = originalQueryTermidSet.iterator();
-					String[] qterms = new String[originalQueryTermidSet.size()];
-					int qCount = 0;
-					while (it.hasNext()) {
-						qterms[qCount] = (String) it.next();
-						qCount++;
-					}
+			float totalweight = 0;
+            int feedbackNum = sample.numDocuments();
+            for (int i = 0; i < len; i++) {
+            	String term = SYMBOL_TABLE.idToSymbol(i);
+            	TermsCache.Item item = getItem(term);
+            	float TF = item.ctf;
+            	float DF = item.df;
+            	float weight = 0;
+            	IndexReader ir = this.searcher.getIndexReader();
+            	int docInColl = ir.numDocs();
+            	// get query terms
+            	Iterator it = originalQueryTermidSet.iterator();
+            	String[] qterms = new String[originalQueryTermidSet.size()];
+            	int qCount = 0;
+            	while (it.hasNext()) {
+            		qterms[qCount] = (String) it.next();
+            		qCount++;
+            	}
 
-					
+            	
 
-					if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
-						weight = 0;
-					}
-					allTerms[i] = new ExpansionTerm(term, 0);
-					allTerms[i].setWeightExpansion(weight);
-					this.termMap.put(term, allTerms[i]);
-					totalweight += weight;
-				}
+            	if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
+            		weight = 0;
+            	}
+            	allTerms[i] = new ExpansionTerm(term, 0);
+            	allTerms[i].setWeightExpansion(weight);
+            	this.termMap.put(term, allTerms[i]);
+            	totalweight += weight;
+            }
 
-				java.util.Arrays.sort(allTerms);
-				// determine double normalizing factor
-				float normaliser = allTerms[0].getWeightExpansion();
-				for (ExpansionTerm term : allTerms) {
-					if (normaliser != 0) {
-						term.setWeightExpansion(term.getWeightExpansion()
-								/ totalweight);
-					}
-				}
-
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+            java.util.Arrays.sort(allTerms);
+            // determine double normalizing factor
+            float normaliser = allTerms[0].getWeightExpansion();
+            for (ExpansionTerm term : allTerms) {
+            	if (normaliser != 0) {
+            		term.setWeightExpansion(term.getWeightExpansion()
+            				/ totalweight);
+            	}
+            }
 
 		}
 		return allTerms;
@@ -716,6 +705,69 @@ public class TopicBasedTermSelector extends TermSelector {
 	public String getInfo() {
 		return "TopicSel_s=" + strategy + "t=" + NUM_TOPICS + "beta=" + beta
 				+ "expTag=" + expTag;
+	}
+	
+	private double[] getFeedDocScores(int strategy, int feedDocNum, float[] orgDocScores, float[][] docTopicProbs, 
+	        boolean withOrgScore, float docScoreAlpha){
+	    if (orgDocScores.length == 0) 
+	        return null;
+	    double[] feedbackDocScores = new double[feedDocNum];
+	    java.util.Arrays.fill(feedbackDocScores, 1);
+	    int topicNum = docTopicProbs[0].length;
+
+	    if ((feedDocNum <= 3) || (strategy > 13) || (strategy < 10))
+	        return feedbackDocScores;
+	    
+	    switch(strategy){
+	        case 10://doc similarity score
+	            for (int i = 3; i< feedDocNum; i++){
+	                for(int j = 0; j < 3; j++)
+	                    feedbackDocScores[j] += this.cosine_similarity(docTopicProbs[i], docTopicProbs[j]);
+	                
+	                feedbackDocScores[i] = (1 + (feedbackDocScores[i] - 1)/3)/2; //normalized to range 0-1
+	            }
+	            break;
+	        case 11: //different similarity calculation
+	            for (int i = 3; i< feedDocNum; i++){
+                    for(int j = 0; j < 3; j++)
+                        feedbackDocScores[j] += MetricsUtils.distL2(docTopicProbs[i], docTopicProbs[j]);
+                    
+                    feedbackDocScores[i] = feedbackDocScores[i] /(3*topicNum); //normalized to range 0-1
+                }
+                break;
+	        case 12:// topic entropy. Smaller, better
+	            for (int i = 0; i< feedDocNum; i++){
+	                   for(int j = 0; j< topicNum; j++)
+                        feedbackDocScores[i] += -1 * docTopicProbs[i][j] * Math.log(docTopicProbs[i][j]);
+	            
+	            for (int k = 0; k< feedDocNum; k++)
+	                feedbackDocScores[k] = 1- (feedbackDocScores[k]/Math.log(topicNum));
+                }
+                break;
+	        case 13: //Jenson-Shannon divergence from avg distribution
+	            float[] avgTopicDist = new float[topicNum];
+	            for (int i = 0; i< feedDocNum; i++)
+	                for(int j = 0; j< topicNum; j++)
+	                    avgTopicDist[j] += docTopicProbs[i][j];
+	            
+	            for (int i = 0; i< feedDocNum; i++)
+	                avgTopicDist[i] /= feedDocNum;
+	            
+	            for (int i = 0; i< feedDocNum; i++)
+                    feedbackDocScores[i] = MetricsUtils.jsd(docTopicProbs[i], avgTopicDist);
+
+                break;
+                
+             default: break;
+	        
+	    }
+	    
+	    if (withOrgScore)
+	        for (int i = 0; i< feedDocNum; i++)
+	            feedbackDocScores[i] = feedbackDocScores[i] * (1 - docScoreAlpha) 
+	            + docScoreAlpha * orgDocScores[i];
+	    
+	    return feedbackDocScores;
 	}
 	
 	private static double cosine_similarity(float[] vec1, float[] vec2) { 
