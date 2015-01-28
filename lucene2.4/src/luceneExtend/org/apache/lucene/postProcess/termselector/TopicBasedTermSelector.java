@@ -52,6 +52,8 @@ public class TopicBasedTermSelector extends TermSelector {
 			"TopicBasedTermSelector.strategy", "3"));
 	static boolean expTag = Boolean.parseBoolean(ApplicationSetup.getProperty(
 			"TopicBasedTermSelector.expTag", "false"));
+	   static boolean withOrgScore = Boolean.parseBoolean(ApplicationSetup.getProperty(
+	            "TopicBasedTermSelector.withOrgScore", "false"));
 	static int expNum = Integer.parseInt(ApplicationSetup.getProperty(
 			"TopicBasedTermSelector.expNum", "15"));
 	static int expDoc = Integer.parseInt(ApplicationSetup.getProperty(
@@ -148,6 +150,7 @@ public class TopicBasedTermSelector extends TermSelector {
             }
             logger.info("4.doc weights:" + buf.toString());
         }
+        System.out.println("AssignTermWeights is called, we have dscores now!\n");
 		String[][] termCache = null;
 		int[][] termFreq = null;
 		termMap = new HashMap<String, ExpansionTerm>();
@@ -204,17 +207,6 @@ public class TopicBasedTermSelector extends TermSelector {
 				querytermid[pos++] = id;
 			}
 
-			// //////////////////////////////////////
-			// ExpansionTerm exTerms[] =
-			// selector.getMostWeightedTerms(selector.getNumberOfUniqueTerms());
-			// TIntHashSet set = new TIntHashSet();
-			// for(int i = exTerms.length-1; i > 0 && i > exTerms.length-1
-			// -expNum; i--){
-			// int id = SYMBOL_TABLE.getOrAddSymbol(exTerms[i].getTerm());
-			// set.add(id);
-			// }
-			// backids = set.toArray();
-			// /////////////////////////////////////
 
 		} else {
 			for (String term : this.originalQueryTermidSet) {
@@ -336,7 +328,8 @@ public class TopicBasedTermSelector extends TermSelector {
 
 		int index[] = Arrays.indexSort(theta);
 
-		if (logger.isDebugEnabled()) {
+		double[][] docTopicProbs = new double[sample.numDocuments()][sample.numTopics()];
+		if (true) {
 			for (int i = 0; i < index.length; i++) {
 				float prob = 0;
 				for (int j = 0; j < querytermid.length; j++) {
@@ -349,11 +342,13 @@ public class TopicBasedTermSelector extends TermSelector {
 							+ ", prob: " + prob);
 			}
 			StringBuilder buf = new StringBuilder();
+			
 			for (int i = 0, n = sample.numDocuments(); i < n; i++) {
 				buf.append(i + ":\t");
 				for (int j = 0; j < sample.numTopics(); j++) {
 					buf.append(Rounding.round(sample.documentTopicProb(i, j), 5)
 							+ "\t");
+					docTopicProbs[i][j] =  Rounding.round(sample.documentTopicProb(i, j), 5);
 				}
 				buf.append("\n");
 			}
@@ -366,7 +361,6 @@ public class TopicBasedTermSelector extends TermSelector {
 		if (logger.isDebugEnabled())
 			logger.debug("max topic: " + maxTopic);
 
-		int maxQueryTermId = querytermid[querytermid.length - 1];
 
 		if (strategy == 1) { // take advantage of the topic with the highest
 								// prob
@@ -480,17 +474,13 @@ public class TopicBasedTermSelector extends TermSelector {
 
 			try {
 				float totalweight = 0;
-				int feedbackNum = sample.numDocuments();
 				for (int i = 0; i < len; i++) {
 					String term = SYMBOL_TABLE.idToSymbol(i);
-					TermsCache.Item item = getItem(term);
-					float TF = item.ctf;
-					float DF = item.df;
 					float weight = 0;
 					IndexReader ir = this.searcher.getIndexReader();
 					int docInColl = ir.numDocs();
 					// get query terms
-					Iterator it = originalQueryTermidSet.iterator();
+					Iterator<String> it = originalQueryTermidSet.iterator();
 					String[] qterms = new String[originalQueryTermidSet.size()];
 					int qCount = 0;
 					while (it.hasNext()) {
@@ -570,7 +560,6 @@ public class TopicBasedTermSelector extends TermSelector {
 				}
 
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -578,17 +567,10 @@ public class TopicBasedTermSelector extends TermSelector {
 			// take advantage of word2Vec
 
 			float totalweight = 0;
-            int feedbackNum = sample.numDocuments();
             for (int i = 0; i < len; i++) {
             	String term = SYMBOL_TABLE.idToSymbol(i);
-            	TermsCache.Item item = getItem(term);
-            	float TF = item.ctf;
-            	float DF = item.df;
             	float weight = 0;
-            	IndexReader ir = this.searcher.getIndexReader();
-            	int docInColl = ir.numDocs();
-            	// get query terms
-            	Iterator it = originalQueryTermidSet.iterator();
+            	Iterator<String> it = originalQueryTermidSet.iterator();
             	String[] qterms = new String[originalQueryTermidSet.size()];
             	int qCount = 0;
             	while (it.hasNext()) {
@@ -629,17 +611,10 @@ public class TopicBasedTermSelector extends TermSelector {
 			//candidate feedback terms.
 
 			float totalweight = 0;
-            int feedbackNum = sample.numDocuments();
             for (int i = 0; i < len; i++) {
             	String term = SYMBOL_TABLE.idToSymbol(i);
-            	TermsCache.Item item = getItem(term);
-            	float TF = item.ctf;
-            	float DF = item.df;
             	float weight = 0;
-            	IndexReader ir = this.searcher.getIndexReader();
-            	int docInColl = ir.numDocs();
-            	// get query terms
-            	Iterator it = originalQueryTermidSet.iterator();
+            	Iterator<String> it = originalQueryTermidSet.iterator();
             	String[] qterms = new String[originalQueryTermidSet.size()];
             	int qCount = 0;
             	while (it.hasNext()) {
@@ -668,6 +643,57 @@ public class TopicBasedTermSelector extends TermSelector {
             	}
             }
 
+		}else if (strategy >9){
+            // term weight based on feedback quality
+		      
+	        double []feedDocScores = getFeedDocScores(strategy, sample.numDocuments(), 
+	                dscores, docTopicProbs, withOrgScore, beta);
+            float totalweight = 0;
+            int feedbackNum = sample.numDocuments();
+            for (int i = 0; i < len; i++) {
+                String term = SYMBOL_TABLE.idToSymbol(i);
+                TermsCache.Item item = getItem(term);
+                float TF = item.ctf;
+                float DF = item.df;
+                float weight = 0;
+
+                weight = 0;
+                // use probability in top 1 topic as original weight in one
+                // feedback doc, add all the score up and divide by the doc num
+                // then rank
+                for (int d = 0; d < feedbackNum; d++) {
+                    double docProb = sample.docWordCount(d, i)
+                            / (float) sample.documentLength(d);
+                    if (docProb == 0) {
+                        continue;
+                    }
+                    double onedocWeight = docProb * feedDocScores[d]; //Multiple the term prob by the doc score
+
+                    QEModel.setTotalDocumentLength(1);
+                    weight += QEModel.score((float) onedocWeight, TF, DF);
+                }
+                weight /= feedbackNum;
+                if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
+                    weight = 0;
+                }
+                allTerms[i] = new ExpansionTerm(term, 0);
+                allTerms[i].setWeightExpansion(weight);
+                this.termMap.put(term, allTerms[i]);
+                totalweight += weight;
+            }
+
+            java.util.Arrays.sort(allTerms);
+            // determine double normalizing factor
+            float normaliser = allTerms[0].getWeightExpansion();
+            for (ExpansionTerm term : allTerms) {
+                if (normaliser != 0) {
+                    term.setWeightExpansion(term.getWeightExpansion()
+                            / totalweight);
+                }
+            }
+
+		    
+		    
 		}
 		return allTerms;
 	}
@@ -707,7 +733,7 @@ public class TopicBasedTermSelector extends TermSelector {
 				+ "expTag=" + expTag;
 	}
 	
-	private double[] getFeedDocScores(int strategy, int feedDocNum, float[] orgDocScores, float[][] docTopicProbs, 
+	private double[] getFeedDocScores(int strategy, int feedDocNum, float[] orgDocScores, double[][] docTopicProbs, 
 	        boolean withOrgScore, float docScoreAlpha){
 	    if (orgDocScores.length == 0) 
 	        return null;
@@ -722,7 +748,7 @@ public class TopicBasedTermSelector extends TermSelector {
 	        case 10://doc similarity score
 	            for (int i = 3; i< feedDocNum; i++){
 	                for(int j = 0; j < 3; j++)
-	                    feedbackDocScores[j] += this.cosine_similarity(docTopicProbs[i], docTopicProbs[j]);
+	                    feedbackDocScores[j] += getCosineSimilarity(docTopicProbs[i], docTopicProbs[j]);
 	                
 	                feedbackDocScores[i] = (1 + (feedbackDocScores[i] - 1)/3)/2; //normalized to range 0-1
 	            }
@@ -745,7 +771,7 @@ public class TopicBasedTermSelector extends TermSelector {
                 }
                 break;
 	        case 13: //Jenson-Shannon divergence from avg distribution
-	            float[] avgTopicDist = new float[topicNum];
+	            double[] avgTopicDist = new double[topicNum];
 	            for (int i = 0; i< feedDocNum; i++)
 	                for(int j = 0; j< topicNum; j++)
 	                    avgTopicDist[j] += docTopicProbs[i][j];
@@ -776,6 +802,13 @@ public class TopicBasedTermSelector extends TermSelector {
         double magnitudeB = find_magnitude(vec2); 
         return (dp)/(magnitudeA*magnitudeB); 
     } 
+	
+	   private static double getCosineSimilarity(double[] vec1, double[] vec2) { 
+	        double dp = dot_product(vec1,vec2); 
+	        double magnitudeA = find_magnitude(vec1); 
+	        double magnitudeB = find_magnitude(vec2); 
+	        return (dp)/(magnitudeA*magnitudeB); 
+	    } 
 
     private static double find_magnitude(float[] vec) { 
         double sum_mag=0; 
@@ -785,8 +818,26 @@ public class TopicBasedTermSelector extends TermSelector {
         } 
         return Math.sqrt(sum_mag); 
     } 
+    
+    private static double find_magnitude(double[] vec) { 
+        double sum_mag=0; 
+        for(int i=0;i<vec.length;i++) 
+        { 
+            sum_mag = sum_mag + vec[i]*vec[i]; 
+        } 
+        return Math.sqrt(sum_mag); 
+    } 
 
     private static double dot_product(float[] vec1, float[] vec2) { 
+        double sum=0; 
+        for(int i=0;i<vec1.length;i++) 
+        { 
+            sum = sum + vec1[i]*vec2[i]; 
+        } 
+        return sum; 
+    } 
+    
+    private static double dot_product(double[] vec1, double[] vec2) { 
         double sum=0; 
         for(int i=0;i<vec1.length;i++) 
         { 
