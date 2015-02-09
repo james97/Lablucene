@@ -52,7 +52,7 @@ public class TopicBasedTermSelector extends TermSelector {
 			"TopicBasedTermSelector.strategy", "3"));
 	static boolean expTag = Boolean.parseBoolean(ApplicationSetup.getProperty(
 			"TopicBasedTermSelector.expTag", "false"));
-	   static boolean withOrgScore = Boolean.parseBoolean(ApplicationSetup.getProperty(
+	static boolean withOrgScore = Boolean.parseBoolean(ApplicationSetup.getProperty(
 	            "TopicBasedTermSelector.withOrgScore", "false"));
 	static int expNum = Integer.parseInt(ApplicationSetup.getProperty(
 			"TopicBasedTermSelector.expNum", "15"));
@@ -88,8 +88,8 @@ public class TopicBasedTermSelector extends TermSelector {
 	static int BURNIN_EPOCHS = 10;
 	static int SAMPLE_LAG = 30;
 	static int NUM_SAMPLES = 30;
-	static HashMap<String, float[]> vectorOfTerms = new HashMap<String, float[]>();
-
+	//static HashMap<String, float[]> vectorOfTerms = new HashMap<String, float[]>();
+	static HashMap<String, float[]> vectorOfTerms = null;
 	protected int EXPANSION_MIN_DOCUMENTS;
 	float dscores[];
 
@@ -105,11 +105,10 @@ public class TopicBasedTermSelector extends TermSelector {
 		if (vectorOfTerms != null){
 			BufferedReader br = new BufferedReader(new FileReader(word2vecDataPath));
 			vectline = br.readLine();
-			int numberofTerms = Integer.parseInt(vectline.split("\\s+")[0]);
 			int vctDimension = Integer.parseInt(vectline.split("\\s+")[1]);
 			
 			while  ((vectline = br.readLine()) != null){
-				logger.info("Start reading word2vec file  " + this.word2vecDataPath);
+				//logger.info("Start reading word2vec file  " + this.word2vecDataPath);
 				String [] pairs = vectline.split("\\s+");
 				String term = pairs[0];
 				float [] vector = new float[vctDimension];
@@ -150,7 +149,6 @@ public class TopicBasedTermSelector extends TermSelector {
             }
             logger.info("4.doc weights:" + buf.toString());
         }
-        System.out.println("AssignTermWeights is called, we have dscores now!\n");
 		String[][] termCache = null;
 		int[][] termFreq = null;
 		termMap = new HashMap<String, ExpansionTerm>();
@@ -176,6 +174,8 @@ public class TopicBasedTermSelector extends TermSelector {
 				termFreq[i] = freqs;
 			}
 		}
+		
+		System.out.println("Start LDA...\n");
 
 		// //////////LDA clustering/////////////////////
 		MapSymbolTable SYMBOL_TABLE = new MapSymbolTable();
@@ -248,15 +248,15 @@ public class TopicBasedTermSelector extends TermSelector {
 		// .gibbsSampler(DOC_WORDS, NUM_TOPICS, DOC_TOPIC_PRIOR,
 		// TOPIC_WORD_PRIOR, BURNIN_EPOCHS, SAMPLE_LAG,
 		// NUM_SAMPLES, RANDOM, querytermid, backids, null, tAss);
-		LatentDirichletAllocation.GibbsSample sample = LatentDirichletAllocation
+				LatentDirichletAllocation.GibbsSample sample = LatentDirichletAllocation
 				.gibbsSampler(DOC_WORDS, NUM_TOPICS, DOC_TOPIC_PRIOR,
 						TOPIC_WORD_PRIOR, BURNIN_EPOCHS, SAMPLE_LAG,
 						NUM_SAMPLES, RANDOM, querytermid, backids, null);
 
 		LatentDirichletAllocation lda = sample.lda();
-		short[][] qsamples = lda.sampleTopics(querytermid, numSamples, burnin,
+				short[][] qsamples = lda.sampleTopics(querytermid, numSamples, burnin,
 				sampleLag, RANDOM);
-
+		System.out.println("End LDA...\n");
 		float theta[] = new float[NUM_TOPICS];
 		java.util.Arrays.fill(theta, 0);
 		for (int i = 0; i < qsamples.length; i++) {
@@ -327,7 +327,7 @@ public class TopicBasedTermSelector extends TermSelector {
 		ExpansionTerm[] allTerms = new ExpansionTerm[SYMBOL_TABLE.numSymbols()];
 
 		int index[] = Arrays.indexSort(theta);
-
+		System.out.println("I am in the selectTerm method\n");
 		double[][] docTopicProbs = new double[sample.numDocuments()][sample.numTopics()];
 		if (true) {
 			for (int i = 0; i < index.length; i++) {
@@ -551,6 +551,7 @@ public class TopicBasedTermSelector extends TermSelector {
 
 				java.util.Arrays.sort(allTerms);
 				// determine double normalizing factor
+				System.out.println("What the hell is going on here?\n");
 				float normaliser = allTerms[0].getWeightExpansion();
 				for (ExpansionTerm term : allTerms) {
 					if (normaliser != 0) {
@@ -645,9 +646,13 @@ public class TopicBasedTermSelector extends TermSelector {
 
 		}else if (strategy >9){
             // term weight based on feedback quality
-		      
+		    System.out.println("I am in strategy " + strategy + "\n");
 	        double []feedDocScores = getFeedDocScores(strategy, sample.numDocuments(), 
 	                dscores, docTopicProbs, withOrgScore, beta);
+	        
+	        for (int i = 0; i < feedDocScores.length; i++)
+	            System.out.println("the score of feedback doc " + i + " is " + feedDocScores[i] + "\n");
+	        
             float totalweight = 0;
             int feedbackNum = sample.numDocuments();
             for (int i = 0; i < len; i++) {
@@ -748,15 +753,15 @@ public class TopicBasedTermSelector extends TermSelector {
 	        case 10://doc similarity score
 	            for (int i = 3; i< feedDocNum; i++){
 	                for(int j = 0; j < 3; j++)
-	                    feedbackDocScores[j] += getCosineSimilarity(docTopicProbs[i], docTopicProbs[j]);
+	                    feedbackDocScores[i] += getCosineSimilarity(docTopicProbs[i], docTopicProbs[j]);
 	                
 	                feedbackDocScores[i] = (1 + (feedbackDocScores[i] - 1)/3)/2; //normalized to range 0-1
 	            }
 	            break;
-	        case 11: //different similarity calculation
+	        case 11: //Norm2
 	            for (int i = 3; i< feedDocNum; i++){
                     for(int j = 0; j < 3; j++)
-                        feedbackDocScores[j] += MetricsUtils.distL2(docTopicProbs[i], docTopicProbs[j]);
+                        feedbackDocScores[i] += MetricsUtils.distL2(docTopicProbs[i], docTopicProbs[j]);
                     
                     feedbackDocScores[i] = feedbackDocScores[i] /(3*topicNum); //normalized to range 0-1
                 }
