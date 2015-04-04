@@ -474,40 +474,42 @@ public class TopicBasedTermSelector extends TermSelector {
 
 			try {
 				float totalweight = 0;
+				IndexReader ir = this.searcher.getIndexReader();
+				
+				Iterator<String> it = originalQueryTermidSet.iterator();
+                String[] qterms = new String[originalQueryTermidSet.size()];
+                int qCount = 0;
+                while (it.hasNext()) {
+                    qterms[qCount] = it.next();
+                    qCount++;
+                }
+                int docInColl = ir.numDocs();
+				// get query collection probability P(q)
+                double[] qCollProb = new double[qterms.length];
+
+                // get the postingList and of query terms
+                ArrayList<HashSet> qTermPostings = new ArrayList<HashSet>();
+                for (qCount = 0; qCount < qterms.length; qCount++) {
+                    Term qterm = new Term(this.field, qterms[qCount]);
+                    TermDocs docIds;
+                    docIds = ir.termDocs(qterm);
+
+                    HashSet<Integer> qPostings = new HashSet<Integer>();
+
+                    while (docIds.next())
+                        qPostings.add(docIds.doc());
+
+                    qTermPostings.add(qPostings);
+                    qCollProb[qCount] = qPostings.size()
+                            / (double) docInColl;
+                }
+
+                
 				for (int i = 0; i < len; i++) {
 					String term = SYMBOL_TABLE.idToSymbol(i);
 					float weight = 0;
-					IndexReader ir = this.searcher.getIndexReader();
-					int docInColl = ir.numDocs();
-					// get query terms
-					Iterator<String> it = originalQueryTermidSet.iterator();
-					String[] qterms = new String[originalQueryTermidSet.size()];
-					int qCount = 0;
-					while (it.hasNext()) {
-						qterms[qCount] = (String) it.next();
-						qCount++;
-					}
-
-					// get query collection probability P(q)
-					double[] qCollProb = new double[qterms.length];
-
-					// get the postingList and of query terms
-					ArrayList<HashSet> qTermPostings = new ArrayList<HashSet>();
-					for (qCount = 0; qCount < qterms.length; qCount++) {
-						Term qterm = new Term(this.field, qterms[qCount]);
-						TermDocs docIds;
-						docIds = ir.termDocs(qterm);
-
-						HashSet<Integer> qPostings = new HashSet<Integer>();
-
-						while (docIds.next())
-							qPostings.add(docIds.doc());
-
-						qTermPostings.add(qPostings);
-						qCollProb[qCount] = qPostings.size()
-								/ (double) docInColl;
-					}
-
+					
+					
 					// Get the posting list of the current term
 					weight = 0;
 
@@ -575,13 +577,13 @@ public class TopicBasedTermSelector extends TermSelector {
             	String[] qterms = new String[originalQueryTermidSet.size()];
             	int qCount = 0;
             	while (it.hasNext()) {
-            		qterms[qCount] = (String) it.next();
+            		qterms[qCount] = it.next();
             		qCount++;
             	}
 
             	//calculate the weight of a feedback term based on it's word2vec
             	//similarity to query terms
-            	float [] termVector = this.vectorOfTerms.get(term);
+            	float [] termVector = TopicBasedTermSelector.vectorOfTerms.get(term);
             	for (int t = 0; t < qterms.length; t++){
             		float [] qtermVector = this.vectorOfTerms.get(qterms[t]);
             		weight += cosine_similarity(termVector, qtermVector);
@@ -619,7 +621,7 @@ public class TopicBasedTermSelector extends TermSelector {
             	String[] qterms = new String[originalQueryTermidSet.size()];
             	int qCount = 0;
             	while (it.hasNext()) {
-            		qterms[qCount] = (String) it.next();
+            		qterms[qCount] = it.next();
             		qCount++;
             	}
 

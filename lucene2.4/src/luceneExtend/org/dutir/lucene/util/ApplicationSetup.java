@@ -33,6 +33,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -826,7 +827,7 @@ public class ApplicationSetup {
 	}
 
 	
-	static protected String getSequentialQueryCounter() {
+	static protected String getSequentialQueryCounter() throws IOException {
 		/* TODO: NFS safe locking */
 		File fx = new File(ApplicationSetup.TREC_RESULTS, "querycounter");
 		int counter = 0;
@@ -834,12 +835,21 @@ public class ApplicationSetup {
 			try {
 				BufferedReader buf = new BufferedReader(new FileReader(fx));
 				String s = buf.readLine();
+				if ((s == null) || (s.length()==0))
+				    s = "0";
 				counter = (new Integer(s)).intValue();
 				counter++;
 				buf.close();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		}
+		else{
+		    if(fx.createNewFile()){
+		        FileWriter fw = new FileWriter(fx);
+		        fw.write("0");
+		        fw.close();
+		    }
 		}
 		return ApplicationSetup.TREC_RESULTS + "/"  + counter + LOG_SUFFIX;
 //		return "" + counter;
