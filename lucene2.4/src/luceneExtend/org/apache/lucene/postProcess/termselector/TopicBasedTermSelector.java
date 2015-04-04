@@ -103,7 +103,7 @@ public class TopicBasedTermSelector extends TermSelector {
 		//read training data of word2vec
 		String vectline;
 		if (vectorOfTerms != null){
-			BufferedReader br = new BufferedReader(new FileReader(word2vecDataPath));
+			br = new BufferedReader(new FileReader(word2vecDataPath));
 			vectline = br.readLine();
 			int vctDimension = Integer.parseInt(vectline.split("\\s+")[1]);
 			
@@ -116,7 +116,7 @@ public class TopicBasedTermSelector extends TermSelector {
 				for (int k = 0; k < vctDimension; k++)
 					vector[k] = Float.parseFloat(pairs[k+1]);
 				
-				this.vectorOfTerms.put(term, vector);
+				TopicBasedTermSelector.vectorOfTerms.put(term, vector);
 				
 			}//end of read word2vec file
 		}
@@ -269,11 +269,8 @@ public class TopicBasedTermSelector extends TermSelector {
 			theta[i] = theta[i] / total;
 		}
 
-		// handler.fullReport(sample,5,2,true);
-		// //////////////LDA clusteringend////////////////
-		ExpansionTerm[] allTerms = selectTerm(SYMBOL_TABLE, sample, QEModel,
+		allTerms = selectTerm(SYMBOL_TABLE, sample, QEModel,
 				theta, querytermid, lda, tAss);
-		// logger.info( " feedback term: " + this.termMap.size());
 	}
 
 	float[] sampleTheta(int numTopics, LatentDirichletAllocation lda,
@@ -488,7 +485,7 @@ public class TopicBasedTermSelector extends TermSelector {
                 double[] qCollProb = new double[qterms.length];
 
                 // get the postingList and of query terms
-                ArrayList<HashSet> qTermPostings = new ArrayList<HashSet>();
+                ArrayList<HashSet<Integer>> qTermPostings = new ArrayList<HashSet<Integer>>();
                 for (qCount = 0; qCount < qterms.length; qCount++) {
                     Term qterm = new Term(this.field, qterms[qCount]);
                     TermDocs docIds;
@@ -585,7 +582,7 @@ public class TopicBasedTermSelector extends TermSelector {
             	//similarity to query terms
             	float [] termVector = TopicBasedTermSelector.vectorOfTerms.get(term);
             	for (int t = 0; t < qterms.length; t++){
-            		float [] qtermVector = this.vectorOfTerms.get(qterms[t]);
+            		float [] qtermVector = TopicBasedTermSelector.vectorOfTerms.get(qterms[t]);
             		weight += cosine_similarity(termVector, qtermVector);
             	}
             		weight /= qterms.length;
@@ -708,6 +705,8 @@ public class TopicBasedTermSelector extends TermSelector {
 	static String dmu = ApplicationSetup.getProperty("dlm.mu", "500");
 	static float mu = Integer.parseInt(ApplicationSetup.getProperty(
 			"topicSL.mu", dmu));
+    private BufferedReader br;
+    private ExpansionTerm[] allTerms;
 
 	// float numOfTokens = this.searcher.getNumTokens(field);
 	public float score(float tf, float docLength, float termFrequency,
