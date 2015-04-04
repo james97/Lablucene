@@ -1,6 +1,7 @@
 package org.dutir.lucene;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
@@ -235,12 +236,12 @@ public class TrecLucene {
 	 *            the command line arguments.
 	 * @return int zero if the command line arguments are processed
 	 *         successfully, otherwise it returns an error code.
+	 * @throws IOException 
 	 */
-	protected int processOptions(String[] args) {
+	protected int processOptions(String[] args) throws IOException {
 		if (args.length == 0)
 			return ERROR_NO_ARGUMENTS;
 		paras = Strings.concatenate(args);
-		boolean reloadTag = false;
 		int pos = 0;
 		while (pos < args.length) {
 			if(args[pos].matches("-D.+=.+$")){ //context variable
@@ -301,7 +302,6 @@ public class TrecLucene {
 				String pname = args[pos].substring(2);
 				String pvalue = args[++pos];
 				ApplicationSetup.setProperty(pname, pvalue);
-				reloadTag = true;
 			} 
 			else if (evaluation) {
 				if (evaluationFilename == null) {
@@ -596,8 +596,9 @@ public class TrecLucene {
 	 * 
 	 * @param args
 	 *            the command line arguments
+	 * @throws IOException 
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		try {
 			TrecLucene trecTerrier = new TrecLucene();
 			int status = trecTerrier.processOptions(args);

@@ -541,7 +541,7 @@ public class ApplicationSetup {
 		}
 	}
 
-	public static void loadCommonProperties() {
+	public static void loadCommonProperties() throws IOException {
 		LUCENE_ETC = makeAbsolute(getProperty("lucene.etc", "etc"),
 				LUCENE_HOME);
 		LUCENE_VAR = makeAbsolute(getProperty("lucene.var", "var"),
