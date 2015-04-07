@@ -175,7 +175,6 @@ public class TopicBasedTermSelector extends TermSelector {
 			}
 		}
 		
-		System.out.println("Start LDA...\n");
 
 		// //////////LDA clustering/////////////////////
 		MapSymbolTable SYMBOL_TABLE = new MapSymbolTable();
@@ -256,7 +255,6 @@ public class TopicBasedTermSelector extends TermSelector {
 		LatentDirichletAllocation lda = sample.lda();
 				short[][] qsamples = lda.sampleTopics(querytermid, numSamples, burnin,
 				sampleLag, RANDOM);
-		System.out.println("End LDA...\n");
 		float theta[] = new float[NUM_TOPICS];
 		java.util.Arrays.fill(theta, 0);
 		for (int i = 0; i < qsamples.length; i++) {
@@ -324,7 +322,6 @@ public class TopicBasedTermSelector extends TermSelector {
 		ExpansionTerm[] allTerms = new ExpansionTerm[SYMBOL_TABLE.numSymbols()];
 
 		int index[] = Arrays.indexSort(theta);
-		System.out.println("I am in the selectTerm method\n");
 		double[][] docTopicProbs = new double[sample.numDocuments()][sample.numTopics()];
 		if (true) {
 			for (int i = 0; i < index.length; i++) {
@@ -359,6 +356,26 @@ public class TopicBasedTermSelector extends TermSelector {
 			logger.debug("max topic: " + maxTopic);
 
 
+		 Iterator it = originalQueryTermidSet.iterator();
+         String[] qterms = new String[originalQueryTermidSet.size()];
+         int qCount = 0;
+         while (it.hasNext()) {
+                 qterms[qCount] = (String) it.next();
+                 qCount++;
+         }
+         
+         // get query terms topic probabilities
+         
+         float qtermTopicProb[][] = new float[qterms.length][index.length];
+         for(int m = 0; m < qterms.length; m++){
+             int id = SYMBOL_TABLE.symbolToID(qterms[m]);
+             for (int k = 0; k < index.length; k++)
+                 qtermTopicProb[m][k] = (float) sample.topicWordProb(index[k], id);
+         }
+     
+         
+         int maxQueryTermId = querytermid[querytermid.length - 1];
+		
 		if (strategy == 1) { // take advantage of the topic with the highest
 								// prob
 			float totalweight = 0;
@@ -472,14 +489,7 @@ public class TopicBasedTermSelector extends TermSelector {
 			try {
 				float totalweight = 0;
 				IndexReader ir = this.searcher.getIndexReader();
-				
-				Iterator<String> it = originalQueryTermidSet.iterator();
-                String[] qterms = new String[originalQueryTermidSet.size()];
-                int qCount = 0;
-                while (it.hasNext()) {
-                    qterms[qCount] = it.next();
-                    qCount++;
-                }
+			
                 int docInColl = ir.numDocs();
 				// get query collection probability P(q)
                 double[] qCollProb = new double[qterms.length];
@@ -550,7 +560,6 @@ public class TopicBasedTermSelector extends TermSelector {
 
 				java.util.Arrays.sort(allTerms);
 				// determine double normalizing factor
-				System.out.println("What the hell is going on here?\n");
 				float normaliser = allTerms[0].getWeightExpansion();
 				for (ExpansionTerm term : allTerms) {
 					if (normaliser != 0) {
@@ -570,13 +579,6 @@ public class TopicBasedTermSelector extends TermSelector {
             for (int i = 0; i < len; i++) {
             	String term = SYMBOL_TABLE.idToSymbol(i);
             	float weight = 0;
-            	Iterator<String> it = originalQueryTermidSet.iterator();
-            	String[] qterms = new String[originalQueryTermidSet.size()];
-            	int qCount = 0;
-            	while (it.hasNext()) {
-            		qterms[qCount] = it.next();
-            		qCount++;
-            	}
 
             	//calculate the weight of a feedback term based on it's word2vec
             	//similarity to query terms
@@ -610,29 +612,58 @@ public class TopicBasedTermSelector extends TermSelector {
 			// compare the probability distribution of query terms and 
 			//candidate feedback terms.
 
-			float totalweight = 0;
+		    float totalweight = 0;
+            
+            
+            int feedbackNum = sample.numDocuments();
             for (int i = 0; i < len; i++) {
-            	String term = SYMBOL_TABLE.idToSymbol(i);
-            	float weight = 0;
-            	Iterator<String> it = originalQueryTermidSet.iterator();
-            	String[] qterms = new String[originalQueryTermidSet.size()];
-            	int qCount = 0;
-            	while (it.hasNext()) {
-            		qterms[qCount] = it.next();
-            		qCount++;
-            	}
+                    String term = SYMBOL_TABLE.idToSymbol(i);
+                    TermsCache.Item item = getItem(term);
+                    float TF = item.ctf;
+                    float DF = item.df;
+                    float weight = 0;
+                    IndexReader ir = this.searcher.getIndexReader();
+                    int docInColl = ir.numDocs();
+                    double topicWeight = 0;
+                    
+                    
+                    
+                    //get the topic distribution of current term
+                    float []topicProb = new float[index.length];
+                    for (int k = 0; k < index.length; k++)
+                            topicProb[k] = (float) sample.topicWordProb(index[k], i);
+                    
+                    for(int m = 0; m < qterms.length; m++){
+                        topicWeight += this.cosine_similarity(topicProb, qtermTopicProb[m]);
+                    }
 
-            	
-
-            	if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
-            		weight = 0;
-            	}
-            	allTerms[i] = new ExpansionTerm(term, 0);
-            	allTerms[i].setWeightExpansion(weight);
-            	this.termMap.put(term, allTerms[i]);
-            	totalweight += weight;
+                    topicWeight /= qterms.length;
+                    
+                    for (int d = 0; d < feedbackNum; d++) {
+                        double docProb = sample.docWordCount(d, i)
+                                        / (float) sample.documentLength(d);
+                        if (docProb == 0) {
+                                continue;
+                        }                                   
+                        double docWeight = QEModel.score((float) docProb, TF, DF);
+                        double onedocWeight = (1 - beta) * docWeight + beta
+                                        * topicWeight;
+                        // one doc weight is the original doc weight smoothed by the
+                        // topic prob
+                        QEModel.setTotalDocumentLength(1);
+                        //weight += QEModel.score((float) onedocWeight, TF, DF);
+                        weight += onedocWeight;
+                }
+                weight /= feedbackNum;
+                
+                    if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
+                            weight = 0;
+                    }
+                    allTerms[i] = new ExpansionTerm(term, 0);
+                    allTerms[i].setWeightExpansion(weight);
+                    this.termMap.put(term, allTerms[i]);
+                    totalweight += weight;
             }
-
             java.util.Arrays.sort(allTerms);
             // determine double normalizing factor
             float normaliser = allTerms[0].getWeightExpansion();
