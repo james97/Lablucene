@@ -400,6 +400,8 @@ public class TopicBasedTermSelector extends TermSelector {
 					double topicProb = sample.topicWordProb(maxTopic, i);
 					double onedocWeight = (1 - beta) * docProb + beta
 							* topicProb;
+					System.out.println("topic weight is " + topicProb + 
+					        "and doc weight " + onedocWeight);
 					// one doc weight is the original doc weight smoothed by the
 					// topic prob
 					QEModel.setTotalDocumentLength(1);
@@ -439,14 +441,20 @@ public class TopicBasedTermSelector extends TermSelector {
 				weight = 0;
 				
 				double []topicProb = new double[index.length];
-				for (int k = 0; k < index.length; k++)
+				float avg = 0.0f;
+				for (int k = 0; k < index.length; k++){
 					topicProb[k] = sample.topicWordProb(index[k], i);
-				
+					avg += topicProb[k];
+				}
+				    avg /= index.length;
+				    
 				StandardDeviation sd =  new StandardDeviation();
 				double termDeviation = sd.evaluate(topicProb);
 				
-				double topicWeight = (float) Math.sqrt(termDeviation * sample.topicWordProb(maxTopic, i));
-				
+				//double topicWeight = (float) Math.sqrt(termDeviation * sample.topicWordProb(maxTopic, i));
+				double topicWeight = (float)(termDeviation);
+//				System.out.println("topic weight is " + sample.topicWordProb(maxTopic, i) + 
+//				        " and term deviation is " + termDeviation);
 				
 				for (int d = 0; d < feedbackNum; d++) {
 					double docProb = sample.docWordCount(d, i)
@@ -456,6 +464,8 @@ public class TopicBasedTermSelector extends TermSelector {
 					}
 					double onedocWeight = (1 - beta) * docProb + beta
 							* topicWeight;
+//		               System.out.println("topic weight is " + topicWeight + 
+//	                            "and doc weight " + onedocWeight);
 					// one doc weight is the original doc weight smoothed by the
 					// topic prob
 					QEModel.setTotalDocumentLength(1);
@@ -616,14 +626,14 @@ public class TopicBasedTermSelector extends TermSelector {
             
             
             int feedbackNum = sample.numDocuments();
+            IndexReader ir = this.searcher.getIndexReader();
+            int docInColl = ir.numDocs();
             for (int i = 0; i < len; i++) {
                     String term = SYMBOL_TABLE.idToSymbol(i);
                     TermsCache.Item item = getItem(term);
                     float TF = item.ctf;
                     float DF = item.df;
                     float weight = 0;
-                    IndexReader ir = this.searcher.getIndexReader();
-                    int docInColl = ir.numDocs();
                     double topicWeight = 0;
                     
                     
@@ -639,6 +649,7 @@ public class TopicBasedTermSelector extends TermSelector {
 
                     topicWeight /= qterms.length;
                     
+                    
                     for (int d = 0; d < feedbackNum; d++) {
                         double docProb = sample.docWordCount(d, i)
                                         / (float) sample.documentLength(d);
@@ -646,8 +657,14 @@ public class TopicBasedTermSelector extends TermSelector {
                                 continue;
                         }                                   
                         double docWeight = QEModel.score((float) docProb, TF, DF);
-                        double onedocWeight = (1 - beta) * docWeight + beta
-                                        * topicWeight;
+                        
+                        //topicWeight and doc weight are not on the same level
+//                        double onedocWeight = (1 - beta) * docWeight + beta
+//                                        * topicWeight;
+                        
+                       // double onedocWeight = (1 + beta * topicWeight) * docWeight;
+                        double onedocWeight = beta * (1 +  topicWeight)* sample.topicWordProb(maxTopic, i)
+                                + (1 - beta) * docWeight;
                         // one doc weight is the original doc weight smoothed by the
                         // topic prob
                         QEModel.setTotalDocumentLength(1);

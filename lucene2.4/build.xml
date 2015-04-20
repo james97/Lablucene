@@ -51,7 +51,7 @@
 	<target name="compile"
 	          description="Compiles TerrierExtend's classes to build">
 		<mkdir dir="build"/>
-		<javac optimize="on" nowarn="on" debug="off" destdir="build" failonerror="false">
+		<javac optimize="on" nowarn="on" debug="on" destdir="build" failonerror="false">
 			<compilerarg value="-Xlint:all"/>
 			<src path="src"/>
 			<classpath refid="classpath.test"/>			
