@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -691,6 +692,57 @@ public class TopicBasedTermSelector extends TermSelector {
             	}
             }
 
+		}else if(strategy == 9){
+		    // Used for testing and printing useful information
+		    float totalweight = 0;
+            int feedbackNum = sample.numDocuments();
+            for (int i = 0; i < len; i++) {
+                String term = SYMBOL_TABLE.idToSymbol(i);
+                TermsCache.Item item = getItem(term);
+                float TF = item.ctf;
+                float DF = item.df;
+                float weight = 0;
+
+                weight = 0;
+                // use probability in top 1 topic as original weight in one
+                // feedback doc, add all the score up and divide by the doc num
+                // then rank
+                for (int d = 0; d < feedbackNum; d++) {
+                    double docProb = sample.docWordCount(d, i)
+                            / (float) sample.documentLength(d);
+                    if (docProb == 0) {
+                        continue;
+                    }
+                    double topicProb = sample.topicWordProb(maxTopic, i);
+                    double onedocWeight = (1 - beta) * docProb + beta
+                            * topicProb;
+                    System.out.println("topic weight is " + topicProb +
+                            "and doc weight " + onedocWeight);
+                    // one doc weight is the original doc weight smoothed by the
+                    // topic prob
+                    QEModel.setTotalDocumentLength(1);
+                    weight += QEModel.score((float) onedocWeight, TF, DF);
+                }
+                weight /= feedbackNum;
+                if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
+                    weight = 0;
+                }
+                allTerms[i] = new ExpansionTerm(term, 0);
+                allTerms[i].setWeightExpansion(weight);
+                this.termMap.put(term, allTerms[i]);
+                totalweight += weight;
+            }
+
+            java.util.Arrays.sort(allTerms);
+            // determine double normalizing factor
+            float normaliser = allTerms[0].getWeightExpansion();
+            for (ExpansionTerm term : allTerms) {
+                if (normaliser != 0) {
+                    term.setWeightExpansion(term.getWeightExpansion()
+                            / totalweight);
+                }
+            }
+		    
 		}else if (strategy >9){
             // term weight based on feedback quality
 		    System.out.println("I am in strategy " + strategy + "\n");
@@ -900,6 +952,159 @@ public class TopicBasedTermSelector extends TermSelector {
         return sum; 
     } 
 
+    
+    private class TermScores implements Comparable<TermScores>{
+        private String term;
+        private double docScore;
+        private double topicScore;
+        private double qtermSimScore;
+        private double devScore;
+        
+        
+
+        /**
+         * @return the term
+         */
+        public String getTerm() {
+            return term;
+        }
+
+
+        /**
+         * @param term the term to set
+         */
+        public void setTerm(String term) {
+            this.term = term;
+        }
+
+
+        /**
+         * @return the docScore
+         */
+        public double getDocScore() {
+            return docScore;
+        }
+
+
+        /**
+         * @param docScore the docScore to set
+         */
+        public void setDocScore(double docScore) {
+            this.docScore = docScore;
+        }
+
+
+        /**
+         * @return the topicScore
+         */
+        public double getTopicScore() {
+            return topicScore;
+        }
+
+
+        /**
+         * @param topicScore the topicScore to set
+         */
+        public void setTopicScore(double topicScore) {
+            this.topicScore = topicScore;
+        }
+
+
+        /**
+         * @return the qtermSimScore
+         */
+        public double getQtermSimScore() {
+            return qtermSimScore;
+        }
+
+
+        /**
+         * @param qtermSimScore the qtermSimScore to set
+         */
+        public void setQtermSimScore(double qtermSimScore) {
+            this.qtermSimScore = qtermSimScore;
+        }
+
+
+        /**
+         * @return the devScore
+         */
+        public double getDevScore() {
+            return devScore;
+        }
+
+
+        /**
+         * @param devScore the devScore to set
+         */
+        public void setDevScore(double devScore) {
+            this.devScore = devScore;
+        }
+
+
+        @Override
+        //alphabetical order by default
+        public int compareTo(TermScores other) {
+            return this.term.compareTo(other.term);
+            
+        }
+        
+        
+        public  Comparator<TermScores> TermDocScoreComparator = new Comparator<TermScores>() {
+
+            public int compare(TermScores TermScores1, TermScores TermScores2) {
+
+                double TermDocScores1 = TermScores1.getDocScore();
+                double TermDocScores2 = TermScores2.getDocScore();
+
+                // descending order
+                return -1 * Double.compare(TermDocScores1, TermDocScores2);
+            }
+
+        };
+        
+        public  Comparator<TermScores> TermProbScoreComparator = new Comparator<TermScores>() {
+
+            public int compare(TermScores TermScores1, TermScores TermScores2) {
+
+                double TermProbScores1 = TermScores1.getTopicScore();
+                double TermProbScores2 = TermScores2.getTopicScore();
+
+                // descending order
+                return -1 * Double.compare(TermProbScores1, TermProbScores2);
+            }
+
+        };
+        
+        public  Comparator<TermScores> TermSimScoreComparator = new Comparator<TermScores>() {
+
+            public int compare(TermScores TermScores1, TermScores TermScores2) {
+
+                double TermSimScores1 = TermScores1.getQtermSimScore();
+                double TermSimScores2 = TermScores2.getQtermSimScore();
+
+                // descending order
+                return -1 * Double.compare(TermSimScores1, TermSimScores2);
+            }
+
+        };
+        
+        public  Comparator<TermScores> TermDevScoreComparator = new Comparator<TermScores>() {
+
+            public int compare(TermScores TermScores1, TermScores TermScores2) {
+
+                double TermDevScores1 = TermScores1.getDevScore();
+                double TermDevScores2 = TermScores2.getDevScore();
+
+                // descending order
+                return -1 * Double.compare(TermDevScores1, TermDevScores2);
+            }
+
+        };
+        
+    }
+    
+    
 	/**
 	 * @param args
 	 */

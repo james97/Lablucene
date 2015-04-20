@@ -638,4 +638,5 @@ public class ExpansionTerms {
 		else
 			et.insertRecord(withinDocumentFrequency);
 	}
+	
 }
