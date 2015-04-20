@@ -397,17 +397,18 @@ public class TopicBasedTermSelector extends TermSelector {
 					if (docProb == 0) {
 						continue;
 					}
-					double topicProb = sample.topicWordProb(maxTopic, i);
-					double onedocWeight = (1 - beta) * docProb + beta
-							* topicProb;
-					System.out.println("topic weight is " + topicProb + 
-					        "and doc weight " + onedocWeight);
+					double onedocWeight = docProb;
 					// one doc weight is the original doc weight smoothed by the
 					// topic prob
 					QEModel.setTotalDocumentLength(1);
 					weight += QEModel.score((float) onedocWeight, TF, DF);
 				}
 				weight /= feedbackNum;
+                double topicProb = sample.topicWordProb(maxTopic, i);
+				weight = (float) ((1 - beta) * weight + beta
+                        * topicProb);
+                System.out.println("topic weight is " + topicProb + 
+                        "doc weight " + weight);
 				if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
 					weight = 0;
 				}
@@ -464,8 +465,8 @@ public class TopicBasedTermSelector extends TermSelector {
 					}
 					double onedocWeight = (1 - beta) * docProb + beta
 							* topicWeight;
-//		               System.out.println("topic weight is " + topicWeight + 
-//	                            "and doc weight " + onedocWeight);
+		               System.out.println("topic weight is " + topicWeight + 
+	                            "and doc weight " + onedocWeight);
 					// one doc weight is the original doc weight smoothed by the
 					// topic prob
 					QEModel.setTotalDocumentLength(1);
