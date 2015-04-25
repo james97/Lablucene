@@ -399,7 +399,9 @@ public class TopicBasedTermSelector extends TermSelector {
 					double topicProb = sample.topicWordProb(maxTopic, i);
 					double onedocWeight = (1 - beta) * docProb + beta
 							* topicProb;
-					System.out.println("topic weight is " + topicProb + 
+					
+					if (logger.isDebugEnabled())
+					logger.debug("topic weight is " + topicProb + 
 					        "and doc weight " + onedocWeight);
 					// one doc weight is the original doc weight smoothed by the
 					// topic prob
@@ -762,14 +764,14 @@ public class TopicBasedTermSelector extends TermSelector {
             java.util.Arrays.sort(termScores, TermDocScoreComparator);
             for (int count = 0; (count < 50 && count < len); count++)
                 System.out.println(String.format("Doc Score of %d th term %s is %f ",
-                        index, termScores[count].getTerm(), termScores[count].getDocScore()));
+                        count, termScores[count].getTerm(), termScores[count].getDocScore()));
             
             System.out.println();
             System.out.println();
             java.util.Arrays.sort(termScores, TermTopicScoreComparator);            
             for (int count = 0; (count < 50 && count < len); count++)
                 System.out.println(String.format("Topic Score of %d th term %s is %f ",
-                        index, termScores[count].getTerm(), termScores[count].getTopicScore()));
+                        count, termScores[count].getTerm(), termScores[count].getTopicScore()));
             
          
             System.out.println();
@@ -777,14 +779,14 @@ public class TopicBasedTermSelector extends TermSelector {
             java.util.Arrays.sort(termScores, TermSimScoreComparator);
             for (int count = 0; (count < 50 && count < len); count++)
                 System.out.println(String.format("Sim Score of %d th term %s is %f ",
-                        index, termScores[count].getTerm(), termScores[count].getsimScore()));
+                        count, termScores[count].getTerm(), termScores[count].getsimScore()));
                         
             System.out.println();
             System.out.println();            
             java.util.Arrays.sort(termScores, TermDevScoreComparator);
             for (int count = 0; (count < 50 && count < len); count++)
                 System.out.println(String.format("Dev Score of %d th term %s is %f ",
-                        index, termScores[count].getTerm(), termScores[count].getDevScore()));
+                        count, termScores[count].getTerm(), termScores[count].getDevScore()));
             
 		    
 		}else if (strategy >9){
