@@ -155,7 +155,7 @@ public class QueryExpansionAdap extends QueryExpansion {
 
 		RBooleanClause clauses[] = this.cluaseSet.values().toArray(new RBooleanClause[0]);
 		RBooleanQuery fquery = generateNewQuery(clauses);
-		if(logger.isDebugEnabled())  logger.debug(query.getTopicId() + " Expansion Info:\n" + getExpansionInfo(expandedTerms, true));
+		if(logger.isInfoEnabled())  logger.info(query.getTopicId() + " Expansion Info:\n" + getExpansionInfo(expandedTerms, true));
 		// logger.debug(fquery);
 		int num = Integer.parseInt(ApplicationSetup.getProperty(
 				"TRECQuerying.endFeedback", "1000"));

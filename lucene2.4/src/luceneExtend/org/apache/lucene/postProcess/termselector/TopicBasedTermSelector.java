@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -92,6 +93,7 @@ public class TopicBasedTermSelector extends TermSelector {
 	static HashMap<String, float[]> vectorOfTerms = null;
 	protected int EXPANSION_MIN_DOCUMENTS;
 	float dscores[];
+	Map<String, ExpansionTerm> tmpTermMap = null;
 
 	TObjectIntHashMap<String> dfMap = null;
 
@@ -135,13 +137,14 @@ public class TopicBasedTermSelector extends TermSelector {
 		dscores = new float[scores.length];
 		System.arraycopy(scores, 0, dscores, 0, scores.length);
 
+		
 		if (LanguageModel) {
 			indriNorm(dscores);
 		}
 		Normalizer.norm2(dscores);
-        logger.info("sum of doc weights:" + Arrays.sum(dscores));
+        logger.debug("sum of doc weights:" + Arrays.sum(dscores));
         Normalizer.norm_MaxMin_0_1(dscores); //normalized doc scores
-        if (logger.isInfoEnabled())
+        if (logger.isDebugEnabled())
         {
             StringBuffer buf = new StringBuffer();
             for (int i = 0; i < dscores.length; i++) {
@@ -156,6 +159,7 @@ public class TopicBasedTermSelector extends TermSelector {
 		termCache = new String[docids.length][];
 		termFreq = new int[docids.length][];
 		dfMap = new TObjectIntHashMap<String>();
+		int termCacheSize = 0;
 		for (int i = 0; i < docids.length; i++) {
 			int docid = docids[i];
 			TermFreqVector tfv = null;
@@ -172,12 +176,14 @@ public class TopicBasedTermSelector extends TermSelector {
 				int freqs[] = tfv.getTermFrequencies();
 				termCache[i] = strterms;
 				termFreq[i] = freqs;
+				termCacheSize += termCache.length;
 			}
 		}
 		
 
 		// //////////LDA clustering/////////////////////
 		MapSymbolTable SYMBOL_TABLE = new MapSymbolTable();
+	
 		int[][] DOC_WORDS = new int[docids.length][];
 		int querytermid[] = new int[this.originalQueryTermidSet.size()];
 		int pos = 0;
@@ -194,6 +200,9 @@ public class TopicBasedTermSelector extends TermSelector {
 			selector.setMetaInfo("normalize.weights", "false");
 			selector.setOriginalQueryTerms(originalQueryTermidSet);
 			selector.assignTermWeights(expDocs, expscores, QEModel);
+			this.tmpTermMap = selector.termMap;
+	
+	
 
 			HashMap<String, ExpansionTerm> map = selector
 					.getMostWeightedTermsInHashMap(expNum);
@@ -212,6 +221,7 @@ public class TopicBasedTermSelector extends TermSelector {
 				int id = SYMBOL_TABLE.getOrAddSymbol(term);
 				querytermid[pos++] = id;
 			}
+
 		}
 
 		for (int i = 0; i < docids.length; i++) {
@@ -465,15 +475,26 @@ public class TopicBasedTermSelector extends TermSelector {
 					}
 					double onedocWeight = (1 - beta) * docProb + beta
 							* topicWeight;
-		               System.out.println("topic weight is " + topicWeight + 
-	                            "and doc weight " + onedocWeight);
 					// one doc weight is the original doc weight smoothed by the
 					// topic prob
+		               
+		            //Because tf is normalized by dividing doc length already,
+		             //we set totalDoclength to 1
 					QEModel.setTotalDocumentLength(1);
 					weight += QEModel.score((float) onedocWeight, TF, DF);
 				}
 				weight /= feedbackNum;
 				
+				if (this.tmpTermMap.get(term) != null) 
+				    logger.debug(String.format("term %s has a rocchio weight %f", 
+				            term, this.tmpTermMap.get(term).getWeightExpansion()));
+				
+				if(expTag){
+				    if(this.tmpTermMap.get(term) != null)
+				        weight = (float) ((1 - beta) * this.tmpTermMap.get(term).getWeightExpansion() + beta *topicWeight);
+				    else
+				        weight = (float) ((1 - beta) * weight + beta * topicWeight);;
+				}
 				if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
 					weight = 0;
 				}
@@ -489,7 +510,7 @@ public class TopicBasedTermSelector extends TermSelector {
 			for (ExpansionTerm term : allTerms) {
 				if (normaliser != 0) {
 					term.setWeightExpansion(term.getWeightExpansion()
-							/ totalweight);
+							/ normaliser);
 				}
 			}
 
