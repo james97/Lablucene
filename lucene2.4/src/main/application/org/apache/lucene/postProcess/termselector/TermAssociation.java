@@ -1,11 +1,11 @@
 /**
  * 
  */
-package application.org.apache.lucene.postProcess.termselector;
+package org.apache.lucene.postProcess.termselector;
 
 import java.io.IOException;
 
-import org.apache.commons.math.distribution.NormalDistributionImpl;
+import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.TermPositionVector;
 import org.apache.lucene.search.ScoreDoc;
@@ -32,7 +32,7 @@ public class TermAssociation {
 	final SymbolTable mSymbolTable;
 	//square sigma for normal distribution. 
 	static double sd = Double.parseDouble(ApplicationSetup.getProperty("TermAssociation.sd", "1"));
-	static NormalDistributionImpl nDist = new NormalDistributionImpl(0, sd);
+	static NormalDistribution nDist = new NormalDistribution(0, sd);
 	
 	
 	public TermAssociation (DenseMatrix matrix, SymbolTable symbolTable){

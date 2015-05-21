@@ -29,7 +29,7 @@ package org.dutir.lucene.util;
 
 import java.util.Arrays;
 
-import org.apache.commons.math.distribution.NormalDistributionImpl;
+import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.log4j.Logger;
 
 /**
@@ -50,7 +50,7 @@ public class Distance {
 	 * @return
 	 */
 	public static double unorderGaussianTimes(final int[] positionOfTerm1,
-			final int[] positionOfTerm2, NormalDistributionImpl nDist) {
+			final int[] positionOfTerm2, NormalDistribution nDist) {
 		double retValue =0;
 		if (positionOfTerm1 == null || positionOfTerm2 == null) {
 			return 0;
@@ -73,7 +73,7 @@ public class Distance {
 	 * @return
 	 */
 	public static double unorderGaussianTimes(final int[] positionOfTerm1,
-			final int[] positionOfTerm2, final int winSize, NormalDistributionImpl nDist) {
+			final int[] positionOfTerm2, final int winSize, NormalDistribution nDist) {
 		double retValue =0;
 		if (positionOfTerm1 == null || positionOfTerm2 == null) {
 			return 0;
@@ -589,7 +589,7 @@ public class Distance {
 //		System.out.println(findSmallest(x, y));
 		
 		double sd = Double.parseDouble(ApplicationSetup.getProperty("TermAssociation.sd", "10"));
-		NormalDistributionImpl nDist = new NormalDistributionImpl(0, sd);
+		NormalDistribution nDist = new NormalDistribution(0, sd);
 		int[] pos1 = new int[]{1,7};
 		int[] pos2 = new int[]{3};
 		int winsize =1;

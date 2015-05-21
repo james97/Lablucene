@@ -1,7 +1,7 @@
 /**
  * 
  */
-package application.org.apache.lucene.postProcess;
+package org.apache.lucene.postProcess;
 
 import gnu.trove.TObjectFloatHashMap;
 
@@ -10,6 +10,7 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.TermPositionVector;
+import org.apache.lucene.postProcess.QueryExpansion;
 import org.apache.lucene.postProcess.termselector.TermSelector;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.Query;

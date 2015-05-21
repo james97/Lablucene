@@ -1,7 +1,7 @@
 /**
  * 
  */
-package main.application.org.apache.lucene.postProcess.termselector;
+package org.apache.lucene.postProcess.termselector;
 
 import gnu.trove.TIntObjectHashMap;
 

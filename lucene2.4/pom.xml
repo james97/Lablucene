@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jame.lablucene</groupId>
-  <artifactId>lucene2.4</artifactId>
+  <artifactId>Lablucene</artifactId>
   <version>2.4-SNAPSHOT</version>
   <name>Lablucene</name>
   <description>Revised lucene integrated with Terrier 3.0 for acedemic usage</description>
@@ -96,6 +96,11 @@
   		<artifactId>trove</artifactId>
   	</dependency>
   	<dependency>
+		<groupId>com.google.guava</groupId>
+		<artifactId>guava</artifactId>
+	</dependency>
+  	
+  	<dependency>
   		<groupId>apache-log4j</groupId>
   		<artifactId>log4j</artifactId>
   	</dependency>
@@ -134,6 +139,10 @@
   	<dependency>
   		<groupId>org.glassfish.extras</groupId>
   		<artifactId>glassfish-embedded-all</artifactId>
+  	</dependency>
+  	<dependency>
+  		<groupId>javatar</groupId>
+  		<artifactId>javatar</artifactId>
   	</dependency>
   </dependencies>
   <dependencyManagement>
@@ -237,6 +246,16 @@
   			<groupId>org.glassfish.extras</groupId>
   			<artifactId>glassfish-embedded-all</artifactId>
   			<version>3.0-b74b</version>
+  		</dependency>
+  		<dependency>
+  			<groupId>javatar</groupId>
+  			<artifactId>javatar</artifactId>
+  			<version>2.5</version>
+  		</dependency>
+  		<dependency>
+  			<groupId>com.google.guava</groupId>
+  			<artifactId>guava</artifactId>
+  			<version>18.0</version>
   		</dependency>
   	</dependencies>
   </dependencyManagement>

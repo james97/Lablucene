@@ -1,5 +1,7 @@
 package org.dutir.lucene.query;
 
+import java.util.List;
+
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.RMultiFieldQueryParser;
@@ -8,6 +10,8 @@ import org.apache.lucene.search.RBooleanQuery;
 import org.apache.lucene.search.RConstantScoreRangeQuery;
 import org.apache.lucene.search.RQuery;
 import org.dutir.lucene.util.ApplicationSetup;
+
+import com.google.common.collect.Lists;
 
 public abstract class LuceneQueryParser {
 	/** Encoding to be used to open all files. */
@@ -22,6 +26,8 @@ public abstract class LuceneQueryParser {
 			"trec.query.startid", "0"));
 	public int endid = Integer.parseInt(ApplicationSetup.getProperty(
 			"trec.query.endid", "10000"));
+	public String idranges = ApplicationSetup.getProperty(
+            "trec.query.range", "0-10000");
 
 	/**
 	 * use the queries with odd, or even numbers to retrieve. 0: even number, 1:
@@ -38,7 +44,14 @@ public abstract class LuceneQueryParser {
 	public String getInfo() {
 		String rValue = "";
 		if (partial) {
-			rValue += "Q" + startid + "-" + endid;
+		    if (startid != 0)
+		        rValue += "Q" + startid + "-" + endid;
+		    else if (idranges.compareTo("0-10000") != 0)
+		        rValue += "Q" + idranges.replace(",", "").trim();
+		    else
+		        throw new IllegalArgumentException("When parital is true, you"
+		                + "should input either startid/endid pairs or using"
+		                + "the trec.query.range argument");
 		}
 		if (parityid == 0) {
 			rValue += "QEven";
@@ -73,15 +86,47 @@ public abstract class LuceneQueryParser {
 
 	public abstract void reset();
 
+	private List<Integer> convertRangetoList(String idranges){
+	    List<Integer> ids = Lists.newArrayList();
+	    String[] ranges = idranges.trim().split(",");
+	    for (String range : ranges){
+	        if (!range.contains("-"))
+	            ids.add(Integer.parseInt(range.trim()));
+	        else{
+	            int start = Integer.parseInt(range.split("-")[0]);
+	            int end = Integer.parseInt(range.split("-")[1]);
+	            if (start > end){
+	                int tmp = end;
+	                end = start;
+	                start = tmp;
+	            }
+	            for (int i = start; i <= end; i++)
+	                ids.add(i);
+	        }
+	    }
+	    
+	    return ids;
+	}
+	
 	public RBooleanQuery getNextQuery(String fields[], Analyzer analyzer) {
 		if (partial) {
-			while (hasMoreQueries()) {
-				RBooleanQuery query = getNextLuceneQuery(fields, analyzer);
-				int id = Integer.parseInt(query.getTopicId());
-				if (id >= startid && id <= endid) {
-					return query;
-				}
-			}
+		    if (startid > 0)
+		        while (hasMoreQueries()) {
+		            RBooleanQuery query = getNextLuceneQuery(fields, analyzer);
+		            int id = Integer.parseInt(query.getTopicId());
+		            if (id >= startid && id <= endid) {
+		                return query;
+		            }
+		        }
+		    else if(idranges.compareTo("0-10000") != 0){
+		        List ids = this.convertRangetoList(idranges);
+		        while (hasMoreQueries()) {
+                    RBooleanQuery query = getNextLuceneQuery(fields, analyzer);
+                    int id = Integer.parseInt(query.getTopicId());
+                    if (ids.contains(id))
+                        return query;                  
+		        }
+		    }
 		} else if (parityid == 0) {
 			while (hasMoreQueries()) {
 				RBooleanQuery query = getNextLuceneQuery(fields, analyzer);

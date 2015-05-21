@@ -26,7 +26,7 @@ import org.dutir.util.stream.StreamGenerator;
 import weka.classifiers.Classifier;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.functions.LibSVM;
-import weka.classifiers.functions.SVMreg;
+import weka.classifiers.functions.SMOreg;
 import weka.classifiers.functions.supportVector.NormalizedPolyKernel;
 import weka.core.Attribute;
 import weka.core.FastVector;
@@ -84,8 +84,8 @@ public class PerQueryRegModelTraining extends QueryExpansion {
 			} else {
 				try {
 					classifier = (Classifier) Class.forName("weka.classifiers.functions." + classfierName).newInstance();
-					if(classifier instanceof SVMreg){
-						((SVMreg) classifier).setKernel(new NormalizedPolyKernel());
+					if(classifier instanceof SMOreg){
+						((SMOreg) classifier).setKernel(new NormalizedPolyKernel());
 					}
 					return classifier;
 				} catch (Exception e) {

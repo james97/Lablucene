@@ -9,6 +9,7 @@ import gnu.trove.TObjectIntHashMap;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -92,7 +93,7 @@ public class TopicBasedTermSelector extends TermSelector {
 
 	TObjectIntHashMap<String> dfMap = null;
 
-	public TopicBasedTermSelector() {
+	public TopicBasedTermSelector() throws IOException {
 		super();
 		this.setMetaInfo("normalize.weights", "true");
 		this.EXPANSION_MIN_DOCUMENTS = Integer.parseInt(ApplicationSetup
@@ -102,7 +103,7 @@ public class TopicBasedTermSelector extends TermSelector {
 		if (vectorOfTerms != null){
 			BufferedReader br = new BufferedReader(new FileReader(word2vecDataPath));
 			vectline = br.readLine();
-			int numberofTerms = Integer.parseInt(vectline.split("\\s+")[0]);
+			Integer.parseInt(vectline.split("\\s+")[0]);
 			int vctDimension = Integer.parseInt(vectline.split("\\s+")[1]);
 			
 			while  ((vectline = br.readLine()) != null){
@@ -276,11 +277,8 @@ public class TopicBasedTermSelector extends TermSelector {
 			theta[i] = theta[i] / total;
 		}
 
-		// handler.fullReport(sample,5,2,true);
-		// //////////////LDA clusteringend////////////////
-		ExpansionTerm[] allTerms = selectTerm(SYMBOL_TABLE, sample, QEModel,
+		selectTerm(SYMBOL_TABLE, sample, QEModel,
 				theta, querytermid, lda, tAss);
-		// logger.info( " feedback term: " + this.termMap.size());
 	}
 
 	float[] sampleTheta(int numTopics, LatentDirichletAllocation lda,
@@ -327,7 +325,8 @@ public class TopicBasedTermSelector extends TermSelector {
 		return retV;
 	}
 
-	private ExpansionTerm[] selectTerm(SymbolTable SYMBOL_TABLE,
+	@SuppressWarnings("unused")
+    private ExpansionTerm[] selectTerm(SymbolTable SYMBOL_TABLE,
 			GibbsSample sample, QueryExpansionModel QEModel, float theta[],
 			int querytermid[], LatentDirichletAllocation lda,
 			TermAssociation tAss) {
@@ -364,8 +363,6 @@ public class TopicBasedTermSelector extends TermSelector {
 		int maxTopic = index[index.length - 1];
 		if (logger.isDebugEnabled())
 			logger.debug("max topic: " + maxTopic);
-
-		int maxQueryTermId = querytermid[querytermid.length - 1];
 
 		if (strategy == 1) { // take advantage of the topic with the highest
 								// prob
@@ -479,12 +476,10 @@ public class TopicBasedTermSelector extends TermSelector {
 
 			try {
 				float totalweight = 0;
-				int feedbackNum = sample.numDocuments();
+				sample.numDocuments();
 				for (int i = 0; i < len; i++) {
 					String term = SYMBOL_TABLE.idToSymbol(i);
 					TermsCache.Item item = getItem(term);
-					float TF = item.ctf;
-					float DF = item.df;
 					float weight = 0;
 					IndexReader ir = this.searcher.getIndexReader();
 					int docInColl = ir.numDocs();
@@ -576,108 +571,92 @@ public class TopicBasedTermSelector extends TermSelector {
 		} else if (strategy == 4) { // add by Jun Miao
 			// take advantage of word2Vec
 
-			try {
-				float totalweight = 0;
-				int feedbackNum = sample.numDocuments();
-				for (int i = 0; i < len; i++) {
-					String term = SYMBOL_TABLE.idToSymbol(i);
-					TermsCache.Item item = getItem(term);
-					float TF = item.ctf;
-					float DF = item.df;
-					float weight = 0;
-					IndexReader ir = this.searcher.getIndexReader();
-					int docInColl = ir.numDocs();
-					// get query terms
-					Iterator it = originalQueryTermidSet.iterator();
-					String[] qterms = new String[originalQueryTermidSet.size()];
-					int qCount = 0;
-					while (it.hasNext()) {
-						qterms[qCount] = (String) it.next();
-						qCount++;
-					}
+			float totalweight = 0;
+            sample.numDocuments();
+            for (int i = 0; i < len; i++) {
+            	String term = SYMBOL_TABLE.idToSymbol(i);
+            	TermsCache.Item item = getItem(term);
+            	float weight = 0;
+            	IndexReader ir = this.searcher.getIndexReader();
+            	ir.numDocs();
+            	// get query terms
+            	Iterator it = originalQueryTermidSet.iterator();
+            	String[] qterms = new String[originalQueryTermidSet.size()];
+            	int qCount = 0;
+            	while (it.hasNext()) {
+            		qterms[qCount] = (String) it.next();
+            		qCount++;
+            	}
 
-					//calculate the weight of a feedback term based on it's word2vec
-					//similarity to query terms
-					float [] termVector = this.vectorOfTerms.get(term);
-					for (int t = 0; t < qterms.length; t++){
-						float [] qtermVector = this.vectorOfTerms.get(qterms[t]);
-						weight += cosine_similarity(termVector, qtermVector);
-					}
-						weight /= qterms.length;
+            	//calculate the weight of a feedback term based on it's word2vec
+            	//similarity to query terms
+            	float [] termVector = this.vectorOfTerms.get(term);
+            	for (int t = 0; t < qterms.length; t++){
+            		float [] qtermVector = this.vectorOfTerms.get(qterms[t]);
+            		weight += cosine_similarity(termVector, qtermVector);
+            	}
+            		weight /= qterms.length;
 
-					if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
-						weight = 0;
-					}
-					allTerms[i] = new ExpansionTerm(term, 0);
-					allTerms[i].setWeightExpansion(weight);
-					this.termMap.put(term, allTerms[i]);
-					totalweight += weight;
-				}
+            	if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
+            		weight = 0;
+            	}
+            	allTerms[i] = new ExpansionTerm(term, 0);
+            	allTerms[i].setWeightExpansion(weight);
+            	this.termMap.put(term, allTerms[i]);
+            	totalweight += weight;
+            }
 
-				java.util.Arrays.sort(allTerms);
-				// determine double normalizing factor
-				float normaliser = allTerms[0].getWeightExpansion();
-				for (ExpansionTerm term : allTerms) {
-					if (normaliser != 0) {
-						term.setWeightExpansion(term.getWeightExpansion()
-								/ totalweight);
-					}
-				}
-
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+            java.util.Arrays.sort(allTerms);
+            // determine double normalizing factor
+            float normaliser = allTerms[0].getWeightExpansion();
+            for (ExpansionTerm term : allTerms) {
+            	if (normaliser != 0) {
+            		term.setWeightExpansion(term.getWeightExpansion()
+            				/ totalweight);
+            	}
+            }
 
 		}else if (strategy == 5) { // add by Jun Miao
 			// compare the probability distribution of query terms and 
 			//candidate feedback terms.
 
-			try {
-				float totalweight = 0;
-				int feedbackNum = sample.numDocuments();
-				for (int i = 0; i < len; i++) {
-					String term = SYMBOL_TABLE.idToSymbol(i);
-					TermsCache.Item item = getItem(term);
-					float TF = item.ctf;
-					float DF = item.df;
-					float weight = 0;
-					IndexReader ir = this.searcher.getIndexReader();
-					int docInColl = ir.numDocs();
-					// get query terms
-					Iterator it = originalQueryTermidSet.iterator();
-					String[] qterms = new String[originalQueryTermidSet.size()];
-					int qCount = 0;
-					while (it.hasNext()) {
-						qterms[qCount] = (String) it.next();
-						qCount++;
-					}
+			float totalweight = 0;
+            sample.numDocuments();
+            for (int i = 0; i < len; i++) {
+            	String term = SYMBOL_TABLE.idToSymbol(i);
+            	TermsCache.Item item = getItem(term);
+            	float weight = 0;
+            	IndexReader ir = this.searcher.getIndexReader();
+            	ir.numDocs();
+            	// get query terms
+            	Iterator it = originalQueryTermidSet.iterator();
+            	String[] qterms = new String[originalQueryTermidSet.size()];
+            	int qCount = 0;
+            	while (it.hasNext()) {
+            		qterms[qCount] = (String) it.next();
+            		qCount++;
+            	}
 
-					
+            	
 
-					if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
-						weight = 0;
-					}
-					allTerms[i] = new ExpansionTerm(term, 0);
-					allTerms[i].setWeightExpansion(weight);
-					this.termMap.put(term, allTerms[i]);
-					totalweight += weight;
-				}
+            	if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
+            		weight = 0;
+            	}
+            	allTerms[i] = new ExpansionTerm(term, 0);
+            	allTerms[i].setWeightExpansion(weight);
+            	this.termMap.put(term, allTerms[i]);
+            	totalweight += weight;
+            }
 
-				java.util.Arrays.sort(allTerms);
-				// determine double normalizing factor
-				float normaliser = allTerms[0].getWeightExpansion();
-				for (ExpansionTerm term : allTerms) {
-					if (normaliser != 0) {
-						term.setWeightExpansion(term.getWeightExpansion()
-								/ totalweight);
-					}
-				}
-
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+            java.util.Arrays.sort(allTerms);
+            // determine double normalizing factor
+            float normaliser = allTerms[0].getWeightExpansion();
+            for (ExpansionTerm term : allTerms) {
+            	if (normaliser != 0) {
+            		term.setWeightExpansion(term.getWeightExpansion()
+            				/ totalweight);
+            	}
+            }
 
 		}
 		return allTerms;
@@ -747,7 +726,7 @@ public class TopicBasedTermSelector extends TermSelector {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		StringBuilder buf = new StringBuilder();
+		new StringBuilder();
 	}
 
 	@Override
