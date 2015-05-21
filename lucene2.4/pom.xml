@@ -30,7 +30,33 @@
           <target/>
         </configuration>
       </plugin>
-    </plugins>
+	  
+	  <plugin>
+	<groupId>org.codehaus.mojo</groupId>
+	<artifactId>build-helper-maven-plugin</artifactId>
+	<version>1.8</version>
+	<!-- 添加主源码目录 -->
+	<executions>
+		<execution>
+			<id>add-source</id>
+			<phase>initialize</phase>
+			<goals>
+				<goal>add-source</goal>
+			</goals>
+			<configuration>
+				<sources>
+					<source>${basedir}/src/main/java</source>
+					<source>${basedir}/src/main/application</source>
+					<source>${basedir}/src/main/revised</source>
+					<source>${basedir}/src/main/luceneExtend</source>
+
+			</sources>
+			</configuration>
+		</execution>
+	</executions>
+	</plugin>
+
+</plugins>
   </build>
   <dependencies>
   	<dependency>
@@ -104,8 +130,10 @@
   	<dependency>
   		<groupId>cn.edu.dut</groupId>
   		<artifactId>dutlib</artifactId>
-  		<systemPath>/Users/James/Documents/Projects/Github/Lablucene/lucene2.4/lib/DUTLIB.jar</systemPath>
-  		<scope>system</scope>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.glassfish.extras</groupId>
+  		<artifactId>glassfish-embedded-all</artifactId>
   	</dependency>
   </dependencies>
   <dependencyManagement>
@@ -204,8 +232,11 @@
   			<groupId>cn.edu.dut</groupId>
   			<artifactId>dutlib</artifactId>
   			<version>1.0</version>
-  			<systemPath>/Users/James/Documents/Projects/Github/Lablucene/lucene2.4/lib/DUTLIB.jar</systemPath>
-  			<scope>system</scope>
+  		</dependency>
+  		<dependency>
+  			<groupId>org.glassfish.extras</groupId>
+  			<artifactId>glassfish-embedded-all</artifactId>
+  			<version>3.0-b74b</version>
   		</dependency>
   	</dependencies>
   </dependencyManagement>

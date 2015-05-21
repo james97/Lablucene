@@ -1,7 +1,7 @@
 /**
  * 
  */
-package main.application.org.apache.lucene.postProcess.termselector;
+package application.org.apache.lucene.postProcess.termselector;
 
 import java.io.IOException;
 
