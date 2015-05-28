@@ -1,26 +1,43 @@
-#!/bin/python
+#!/usr/bin/env python
 
 import os
 import sys
 import commands
 import re
+from querycutter import QueryCutter
+#from termcolor import colored
+
+if (len(sys.argv) != 5):
+    print "Help:the format is: python nFoldcrossValid.py collectionPath strategy " +\
+            "queryIdRange idgap" 
 
 collection = sys.argv[1]
 allresults = collection 
 docNums = ["5", "10", "20", "30", "50"]
 betas = [u"0.*"]
 strategy = sys.argv[2]
+cutter = QueryCutter(sys.argv[3], int(sys.argv[4]))
 #parities = ["Odd", "Even"]
 #parities = ["451-475","476-500"]
-CVIdPairs = {"156-200":"150-155"}
-print collection
+CVIdPairs = {}
+oneFold, nFold = cutter.generate_range_pairs()
+for i in range(len(oneFold)):
+    if nFold[i] == "151-195":
+        nFold[i] = "151-195,201-200"
+    CVIdPairs[nFold[i].replace(",", "")] = oneFold[i]
+
+
 
 
 cmds =[]
 for docNum in docNums:
     for beta in betas:
         for parity in CVIdPairs.keys():
-		cmd = u"./listMAP.py " + allresults +u"/|grep Q" + parity +u"DPH_QEAdap_TopicSel_" + strategy + ".*" + beta + "=trueFromTop_" + docNum + u"_20_TFIDF|cut -d: -f3|sort"
+		#DPH_QEAdap_RocDFRPow=1.5FromTop_10_20_TFIDF0.2
+		if strategy == "Roc":
+		    cmd  = u"./listMAP.py " + allresults +u"/|grep Q" + parity +u"DPH_QEAdap_RocDFRPow=1.5FromTop_" + docNum + u"_20_TFIDF|cut -d: -f3|sort"
+		else:
+		    cmd = u"./listMAP.py " + allresults +u"/|grep Q" + parity +u"DPH_QEAdap_TopicSel_" + strategy + ".*" + beta + "=trueFromTop_" + docNum + u"_20_TFIDF|cut -d: -f3|sort"
 		cmds.append(cmd)
 
 #print len(cmds)
@@ -48,7 +65,7 @@ for cmd in cmds:
     accordings.append(accordingResult[0])
 
 #print bestScores
-pattern = u"expTag=trueFromTop_.*_20_TFIDF"
+pattern = u"FromTop_.*_20_TFIDF"
 #pattern = u"DPH_QEAdap_TopicSel_s=[0-9]{1,2}t=[0-9]{1,2}beta=.*expTag=truewithOrgScore=trueFromTop_.*_30_TFIDF0\.[0-9]"
 pairs = {}
 for according in accordings:
