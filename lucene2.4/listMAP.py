@@ -9,9 +9,6 @@ def runBash(cmd):
     out = p.stdout.read().strip()
     return out  #This is the stdout from the shell command
 
-spec="var/results/topicRF/GOV2/"
-spec="var/results/topicRF/GOV2RF08/"
-
 def main():
  parser = OptionParser(usage="usage: %prog [options] [dirname]",version="%prog 1.0")
  parser.add_option("-d",
