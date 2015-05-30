@@ -17,9 +17,10 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
-import org.apache.lucene.index.IndexReader;
 import java.io.IOException;
 import java.io.Serializable;
+
+import org.apache.lucene.index.IndexReader;
 
 /**
  * Expert: returns a comparator for sorting ScoreDocs.

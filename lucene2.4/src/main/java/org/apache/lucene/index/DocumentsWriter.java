@@ -17,27 +17,27 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.search.Similarity;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Scorer;
-import org.apache.lucene.search.Weight;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.AlreadyClosedException;
-import org.apache.lucene.util.ArrayUtil;
-
 import java.io.IOException;
 import java.io.PrintStream;
+import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
-import java.text.NumberFormat;
+
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Scorer;
+import org.apache.lucene.search.Similarity;
+import org.apache.lucene.search.Weight;
+import org.apache.lucene.store.AlreadyClosedException;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.util.ArrayUtil;
 
 /**
  * This class accepts multiple added documents and directly

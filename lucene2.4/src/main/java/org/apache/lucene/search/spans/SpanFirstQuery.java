@@ -18,10 +18,9 @@ package org.apache.lucene.search.spans;
  */
 
 import java.io.IOException;
-
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
-import java.util.ArrayList;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Query;

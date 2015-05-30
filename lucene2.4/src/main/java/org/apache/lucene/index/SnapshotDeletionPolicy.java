@@ -17,10 +17,11 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.ArrayList;
-import java.io.IOException;
+
 import org.apache.lucene.store.Directory;
 
 /** A {@link IndexDeletionPolicy} that wraps around any other

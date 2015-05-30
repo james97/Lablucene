@@ -18,12 +18,12 @@ package org.apache.lucene.search;
  */
 
 import java.io.IOException;
-import java.util.Set;
 import java.util.ArrayList;
+import java.util.Set;
 
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermPositions;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.model.WeightModelManager;
 import org.apache.lucene.search.model.WeightingModel;
 import org.apache.lucene.util.ToStringUtils;

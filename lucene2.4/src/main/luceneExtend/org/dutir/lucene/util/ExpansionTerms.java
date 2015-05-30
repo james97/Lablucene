@@ -28,20 +28,16 @@
  */
 package org.dutir.lucene.util;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-
 import gnu.trove.THashSet;
 import gnu.trove.TIntHashSet;
-import gnu.trove.TIntObjectHashMap;
-import gnu.trove.TObjectObjectProcedure;
+
+import java.io.IOException;
+import java.util.Comparator;
+import java.util.HashMap;
 
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.postProcess.QueryExpansionModel;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.model.Statistics;
 import org.dutir.lucene.util.TermsCache.Item;

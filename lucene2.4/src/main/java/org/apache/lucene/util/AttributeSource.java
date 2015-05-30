@@ -19,13 +19,13 @@ package org.apache.lucene.util;
 
 import java.lang.ref.WeakReference;
 import java.util.Collections;
-import java.util.NoSuchElementException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.WeakHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
+import java.util.WeakHashMap;
 
 import org.apache.lucene.analysis.TokenStream; // for javadocs
 

@@ -18,7 +18,6 @@ import org.apache.lucene.analysis.standard.StandardTokenizer;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 /*
 
 NOTE: if you change StandardTokenizerImpl.jflex and need to regenerate
@@ -29,8 +28,6 @@ NOTE: if you change StandardTokenizerImpl.jflex and need to regenerate
       https://issues.apache.org/jira/browse/LUCENE-1126 for details.
 
 */
-
-import org.apache.lucene.analysis.Token;
 
 
 /**

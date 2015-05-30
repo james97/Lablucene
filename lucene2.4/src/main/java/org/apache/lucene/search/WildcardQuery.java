@@ -17,9 +17,10 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
+import java.io.IOException;
+
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
-import java.io.IOException;
 
 /** Implements the wildcard search query. Supported wildcards are <code>*</code>, which
  * matches any character sequence (including the empty one), and <code>?</code>,

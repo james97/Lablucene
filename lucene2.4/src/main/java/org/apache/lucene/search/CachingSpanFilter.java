@@ -16,12 +16,12 @@ package org.apache.lucene.search;
  */
 
 
-import org.apache.lucene.index.IndexReader;
-
 import java.io.IOException;
 import java.util.BitSet;
 import java.util.Map;
 import java.util.WeakHashMap;
+
+import org.apache.lucene.index.IndexReader;
 
 /**
  * Wraps another SpanFilter's result and caches it.  The purpose is to allow

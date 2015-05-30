@@ -17,12 +17,13 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
+import java.io.IOException;
+import java.util.BitSet;
+import java.util.Map;
+import java.util.WeakHashMap;
+
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.util.DocIdBitSet;
-import java.util.BitSet;
-import java.util.WeakHashMap;
-import java.util.Map;
-import java.io.IOException;
 
 /**
  * Wraps another filter's result and caches it.  The purpose is to allow

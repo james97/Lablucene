@@ -17,8 +17,8 @@ package org.apache.lucene.analysis;
  * limitations under the License.
  */
 
-import java.io.Reader;
 import java.io.IOException;
+import java.io.Reader;
 
 /** An Analyzer that filters LetterTokenizer with LowerCaseFilter. */
 

@@ -17,8 +17,9 @@ package org.apache.lucene.index;
  * limitations under the License.
 */
 
-import java.util.Collection;
 import java.io.IOException;
+import java.util.Collection;
+
 import org.apache.lucene.store.Directory;
 
 /**

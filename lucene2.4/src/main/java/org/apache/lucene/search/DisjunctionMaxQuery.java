@@ -16,13 +16,13 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
-import org.apache.lucene.index.IndexReader;
-
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Set;
+
+import org.apache.lucene.index.IndexReader;
 
 /**
  * A query that generates the union of documents produced by its subqueries, and that scores each document with the maximum

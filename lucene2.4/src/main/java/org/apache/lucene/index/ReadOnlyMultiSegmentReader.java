@@ -17,10 +17,10 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
-import org.apache.lucene.store.Directory;
-
 import java.io.IOException;
 import java.util.Map;
+
+import org.apache.lucene.store.Directory;
 
 class ReadOnlyMultiSegmentReader extends MultiSegmentReader {
   ReadOnlyMultiSegmentReader(Directory directory, SegmentInfos sis, boolean closeDirectory) throws IOException {

@@ -31,18 +31,17 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Random;
-import java.io.InputStreamReader;
-import org.apache.log4j.Logger;
 
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
-import org.apache.hadoop.fs.FileStatus;
-
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.log4j.Logger;
 import org.dutir.lucene.util.ApplicationSetup;
 import org.dutir.lucene.util.Files;
 import org.dutir.lucene.util.Files.FSCapability;

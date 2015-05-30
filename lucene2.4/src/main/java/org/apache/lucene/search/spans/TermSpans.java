@@ -16,12 +16,12 @@ package org.apache.lucene.search.spans;
  */
 
 
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermPositions;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Collection;
 
 /**
  * Expert:

@@ -10,17 +10,12 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
-import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.search.RBooleanQuery;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.TopDocCollector;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.search.model.Idf;
 import org.dutir.lucene.evaluation.AdhocEvaluation;
 import org.dutir.lucene.util.ApplicationSetup;
-import org.dutir.lucene.util.ExpansionTerms;
-import org.dutir.lucene.util.TermsCache.Item;
-import org.dutir.util.Arrays;
 import org.dutir.util.stream.StreamGenerator;
 
 /**

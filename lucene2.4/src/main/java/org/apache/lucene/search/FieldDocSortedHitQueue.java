@@ -17,10 +17,10 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
-import org.apache.lucene.util.PriorityQueue;
-
 import java.text.Collator;
 import java.util.Locale;
+
+import org.apache.lucene.util.PriorityQueue;
 
 /**
  * Expert: Collects sorted results from Searchable's and collates them.

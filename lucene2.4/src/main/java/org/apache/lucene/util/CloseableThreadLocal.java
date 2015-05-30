@@ -17,10 +17,10 @@ package org.apache.lucene.util;
  * limitations under the License.
  */
 
-import java.util.Map;
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.lang.ref.WeakReference;
+import java.util.Map;
 
 /** Java's builtin ThreadLocal has a serious flaw:
  *  it can take an arbitrarily long amount of time to

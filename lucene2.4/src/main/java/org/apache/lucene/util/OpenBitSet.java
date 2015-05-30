@@ -17,8 +17,8 @@
 
 package org.apache.lucene.util;
 
-import java.util.Arrays;
 import java.io.Serializable;
+import java.util.Arrays;
 
 import org.apache.lucene.search.DocIdSet;
 import org.apache.lucene.search.DocIdSetIterator;

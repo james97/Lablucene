@@ -17,18 +17,17 @@ package org.apache.lucene.search.spans;
  * limitations under the License.
  */
 
-import org.apache.lucene.index.IndexReader;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Collection;
 import java.util.Set;
+
+import org.apache.lucene.index.IndexReader;
 
 /** A Spans that is formed from the ordered subspans of a SpanNearQuery
  * where the subspans do not overlap and have a maximum slop between them.

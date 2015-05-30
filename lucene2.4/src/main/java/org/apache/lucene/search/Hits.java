@@ -19,8 +19,8 @@ package org.apache.lucene.search;
 
 import java.io.IOException;
 import java.util.ConcurrentModificationException;
-import java.util.Vector;
 import java.util.Iterator;
+import java.util.Vector;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.CorruptIndexException;

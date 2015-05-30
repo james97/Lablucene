@@ -21,7 +21,6 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
-import org.apache.lucene.search.Similarity;
 
 /**
  * Similarity for BM25 ranking functions family.<BR>

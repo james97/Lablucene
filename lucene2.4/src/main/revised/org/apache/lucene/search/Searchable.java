@@ -17,13 +17,13 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
+import java.io.IOException;       // for javadoc
+
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FieldSelector;
+import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.CorruptIndexException;
-
-import java.io.IOException;       // for javadoc
 
 /** The interface for search implementations.
  *

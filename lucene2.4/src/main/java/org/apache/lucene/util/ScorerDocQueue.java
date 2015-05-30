@@ -20,6 +20,7 @@ package org.apache.lucene.util;
 /* Derived from org.apache.lucene.util.PriorityQueue of March 2005 */
 
 import java.io.IOException;
+
 import org.apache.lucene.search.Scorer;
 
 /** A ScorerDocQueue maintains a partial ordering of its Scorers such that the

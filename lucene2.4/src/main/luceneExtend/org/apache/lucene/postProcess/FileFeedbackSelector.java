@@ -5,7 +5,6 @@ import gnu.trove.THashMap;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 
 import org.apache.log4j.Logger;
 import org.dutir.lucene.util.ApplicationSetup;

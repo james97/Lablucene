@@ -17,8 +17,6 @@
 
 package org.apache.lucene.util;
 
-import java.io.IOException;
-
 import org.apache.lucene.search.DocIdSetIterator;
 
 /** An iterator to iterate over set bits in an OpenBitSet.

@@ -17,10 +17,10 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
+import java.io.IOException;
+
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
-
-import java.io.IOException;
 
 /** Subclass of FilteredTermEnum for enumerating all terms that are similiar
  * to the specified filter term.

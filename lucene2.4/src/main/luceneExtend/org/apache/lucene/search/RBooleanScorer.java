@@ -19,11 +19,7 @@ package org.apache.lucene.search;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Iterator;
 import java.util.TreeSet;
-
-import javax.naming.InitialContext;
 
 /**
  * An alternative to BooleanScorer that also allows a minimum number of optional

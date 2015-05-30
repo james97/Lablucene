@@ -18,8 +18,8 @@ package org.apache.lucene.search;
  */
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 
 /** Scorer for conjunctions, sets of queries, all of which are required. */

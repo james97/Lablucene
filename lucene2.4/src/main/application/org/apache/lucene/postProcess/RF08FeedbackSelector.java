@@ -13,7 +13,6 @@ import org.apache.lucene.search.model.Idf;
 import org.dutir.lucene.evaluation.TRECQrelsInMemory;
 import org.dutir.lucene.util.ApplicationSetup;
 import org.dutir.lucene.util.Files;
-import org.dutir.util.Normalizer;
 import org.dutir.util.Pair;
 
 /**

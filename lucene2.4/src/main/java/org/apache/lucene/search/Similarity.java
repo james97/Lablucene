@@ -17,13 +17,13 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
-import org.apache.lucene.index.Term;
-import org.apache.lucene.util.SmallFloat;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
+
+import org.apache.lucene.index.Term;
+import org.apache.lucene.util.SmallFloat;
 
 /** Expert: Scoring API.
  * <p>Subclasses implement search scoring.

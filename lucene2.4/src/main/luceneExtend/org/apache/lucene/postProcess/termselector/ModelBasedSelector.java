@@ -4,7 +4,6 @@
 package org.apache.lucene.postProcess.termselector;
 
 import gnu.trove.TObjectFloatHashMap;
-import gnu.trove.TObjectFloatIterator;
 import gnu.trove.TObjectIntHashMap;
 
 import java.io.IOException;
@@ -15,15 +14,10 @@ import org.apache.log4j.Logger;
 import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.index.TermPositionVector;
 import org.apache.lucene.postProcess.QueryExpansionModel;
-import org.apache.lucene.search.model.Idf;
-import org.apache.lucene.search.model.WeightModelManager;
-import org.apache.lucene.search.model.WeightingModel;
 import org.dutir.lucene.util.ApplicationSetup;
-import org.dutir.lucene.util.TermsCache;
 import org.dutir.lucene.util.ExpansionTerms.ExpansionTerm;
 import org.dutir.lucene.util.TermsCache.Item;
 import org.dutir.util.Arrays;
-import org.dutir.util.Math;
 
 /**
  *  * Modelbased Feedback -- Zhai, CIKM2001

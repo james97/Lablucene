@@ -17,8 +17,8 @@ package org.apache.lucene.analysis.standard;
  * limitations under the License.
  */
 
-import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.Token;
+import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 
 /** Normalizes tokens extracted with {@link StandardTokenizer}. */

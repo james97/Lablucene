@@ -17,10 +17,10 @@
 
 package org.apache.lucene.search.function;
 
+import java.io.IOException;
+
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.FieldCache;
-
-import java.io.IOException;
 
 /**
  * Expert: obtains the ordinal of the field value from the default Lucene 

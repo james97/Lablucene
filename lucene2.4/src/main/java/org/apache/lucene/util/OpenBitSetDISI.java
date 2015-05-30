@@ -18,6 +18,7 @@ package org.apache.lucene.util;
  */
 
 import java.io.IOException;
+
 import org.apache.lucene.search.DocIdSetIterator;
  
 public class OpenBitSetDISI extends OpenBitSet {

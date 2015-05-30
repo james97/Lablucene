@@ -18,8 +18,9 @@ package org.apache.lucene.index;
  */
 
 import java.io.IOException;
-import org.apache.lucene.util.BitVector;
+
 import org.apache.lucene.store.IndexInput;
+import org.apache.lucene.util.BitVector;
 
 class SegmentTermDocs implements TermDocs {
   protected SegmentReader parent;

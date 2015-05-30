@@ -18,13 +18,11 @@ package org.apache.lucene.search;
  */
 
 import java.io.IOException;
-
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.Query;
 /** The abstract base class for queries.
     <p>Instantiable subclasses are:
     <ul>

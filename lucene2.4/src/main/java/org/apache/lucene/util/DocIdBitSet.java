@@ -18,6 +18,7 @@ package org.apache.lucene.util;
  */
 
 import java.util.BitSet;
+
 import org.apache.lucene.search.DocIdSet;
 import org.apache.lucene.search.DocIdSetIterator;
 

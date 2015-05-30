@@ -1,7 +1,5 @@
 package org.dutir.lucene;
 
-import gnu.trove.THashSet;
-
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -22,7 +20,6 @@ import java.util.zip.GZIPOutputStream;
 import org.apache.log4j.Logger;
 import org.apache.lucene.OutputFormat;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.postProcess.PostProcess;
 import org.apache.lucene.queryParser.AnalyzerManager;
 import org.apache.lucene.search.BooleanClause;
@@ -33,8 +30,6 @@ import org.apache.lucene.search.RBooleanQuery;
 import org.apache.lucene.search.RTermQuery;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.TopDocCollector;
-import org.apache.lucene.search.TopDocs;
-import org.dutir.lucene.evaluation.TRECQrelsInMemory;
 import org.dutir.lucene.query.LuceneQueryParser;
 import org.dutir.lucene.util.ApplicationSetup;
 import org.dutir.lucene.util.TermsCache;

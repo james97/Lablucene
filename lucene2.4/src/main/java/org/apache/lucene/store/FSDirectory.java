@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.lucene.index.IndexFileNameFilter;
-
 // Used only for WRITE_LOCK_NAME in deprecated create=true case:
 import org.apache.lucene.index.IndexWriter;
 

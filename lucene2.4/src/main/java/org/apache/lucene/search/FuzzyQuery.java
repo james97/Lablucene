@@ -17,12 +17,12 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
+import java.io.IOException;
+
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.util.PriorityQueue;
 import org.apache.lucene.util.ToStringUtils;
-
-import java.io.IOException;
 
 /** Implements the fuzzy search query. The similiarity measurement
  * is based on the Levenshtein (edit distance) algorithm.

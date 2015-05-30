@@ -1,15 +1,14 @@
 package org.apache.lucene.postProcess.termselector;
 
 
-import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.TermPositionVector;
 import org.apache.lucene.postProcess.QueryExpansionModel;
 import org.dutir.lucene.util.ApplicationSetup;
-import org.dutir.lucene.util.TermsCache;
 import org.dutir.lucene.util.ExpansionTerms.ExpansionTerm;
+import org.dutir.lucene.util.TermsCache;
 
 
 

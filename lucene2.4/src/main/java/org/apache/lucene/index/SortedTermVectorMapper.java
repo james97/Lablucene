@@ -15,7 +15,11 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * Store a sorted collection of {@link org.apache.lucene.index.TermVectorEntry}s.  Collects all term information

@@ -20,9 +20,9 @@ package org.apache.lucene.search;
 import java.io.IOException;
 import java.util.Set;
 
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.util.ToStringUtils;
 
 /** A Query that matches documents containing a term.

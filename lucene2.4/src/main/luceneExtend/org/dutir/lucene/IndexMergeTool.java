@@ -5,7 +5,6 @@ package org.dutir.lucene;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.StringReader;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
@@ -13,7 +12,6 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.queryParser.AnalyzerManager;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.dutir.util.Arrays;
 import org.dutir.util.stream.StreamGenerator;
 
 /**

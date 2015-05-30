@@ -17,12 +17,17 @@ package org.apache.lucene.analysis.standard;
  * limitations under the License.
  */
 
-import org.apache.lucene.analysis.*;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Set;
+
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.LowerCaseFilter;
+import org.apache.lucene.analysis.StopAnalyzer;
+import org.apache.lucene.analysis.StopFilter;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.WordlistLoader;
 
 /**
  * Filters {@link StandardTokenizer} with {@link StandardFilter}, {@link

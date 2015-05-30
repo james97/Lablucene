@@ -19,11 +19,11 @@ package org.apache.lucene.index;
 
 import java.io.IOException;
 
-import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.BufferedIndexInput;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.util.CloseableThreadLocal;
 import org.apache.lucene.util.cache.Cache;
 import org.apache.lucene.util.cache.SimpleLRUCache;
-import org.apache.lucene.util.CloseableThreadLocal;
 
 /** This stores a monotonically increasing set of <Term, TermInfo> pairs in a
  * Directory.  Pairs are accessed either by Term or by ordinal position the

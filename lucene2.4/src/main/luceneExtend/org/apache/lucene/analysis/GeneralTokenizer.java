@@ -8,7 +8,6 @@ import java.io.Reader;
 import java.io.StringReader;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.analysis.standard.StandardTokenizer;
 
 /**
  * @author yezheng

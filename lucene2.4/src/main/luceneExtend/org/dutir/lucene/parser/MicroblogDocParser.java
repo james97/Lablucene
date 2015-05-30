@@ -3,16 +3,12 @@ package org.dutir.lucene.parser;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.StringWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Stack;
 
 import org.apache.log4j.Logger;
 import org.apache.lucene.document.DateTools;
@@ -23,7 +19,6 @@ import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.Field.TermVector;
 import org.apache.lucene.index.IndexWriter;
 import org.dutir.lucene.util.ApplicationSetup;
-import org.dutir.lucene.util.TagSet;
 
 /**
  * @author Yezheng

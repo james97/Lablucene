@@ -25,13 +25,12 @@
  *   Ben He <ben{a.}dcs.gla.ac.uk> 
  */
 package org.dutir.lucene.evaluation;
-import java.io.BufferedReader;
 import java.io.File;
 import java.util.StringTokenizer;
 import java.util.Vector;
+
 import org.apache.log4j.Logger;
 import org.dutir.lucene.util.ApplicationSetup;
-import org.dutir.lucene.util.Files;
 /**
  * Performs a query by query evaluation of a results file. Like trec_eval -q.
  */

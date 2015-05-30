@@ -1,7 +1,6 @@
 package org.dutir.lucene;
 
 import java.io.PrintWriter;
-import java.util.HashMap;
 import java.util.HashSet;
 
 import org.apache.log4j.Logger;

@@ -19,8 +19,7 @@ package org.apache.lucene.search;
 
 import java.io.IOException;
 
-import org.apache.lucene.index.*;
-import org.apache.lucene.search.model.WeightModelManager;
+import org.apache.lucene.index.TermPositions;
 import org.apache.lucene.search.model.WeightingModel;
 
 /** Expert: Scoring functionality for phrase queries.

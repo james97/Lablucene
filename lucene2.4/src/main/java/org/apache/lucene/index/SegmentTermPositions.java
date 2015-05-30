@@ -17,9 +17,9 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
-import org.apache.lucene.store.IndexInput;
-
 import java.io.IOException;
+
+import org.apache.lucene.store.IndexInput;
 
 final class SegmentTermPositions
 extends SegmentTermDocs implements TermPositions {

@@ -25,11 +25,12 @@
  *   Craig Macdonald (craigm{at}dcs.gla.ac.uk)
  */
 package org.dutir.lucene.io;
-import org.dutir.lucene.util.Files.FSCapability;
-import java.net.URL;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URL;
+
+import org.dutir.lucene.util.Files.FSCapability;
 
 /** Implements a read-only HTTP file system for Terrier. Files can be read directly from a URL
  * @author Craig Macdonald

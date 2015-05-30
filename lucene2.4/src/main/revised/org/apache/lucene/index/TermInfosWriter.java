@@ -19,8 +19,9 @@ package org.apache.lucene.index;
 
 
 import java.io.IOException;
-import org.apache.lucene.store.IndexOutput;
+
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.IndexOutput;
 import org.apache.lucene.util.UnicodeUtil;
 
 /** This stores a monotonically increasing set of <Term, TermInfo> pairs in a

@@ -17,9 +17,10 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
+import java.io.IOException;
+
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.store.IndexOutput;
-import java.io.IOException;
 
 /* IndexInput that knows how to read the byte slices written
  * by Posting and PostingVector.  We read the bytes in

@@ -18,6 +18,7 @@ package org.apache.lucene.index;
  */
 
 import java.io.IOException;
+
 import org.apache.lucene.store.IndexInput;
 
 final class SegmentTermEnum extends TermEnum implements Cloneable {

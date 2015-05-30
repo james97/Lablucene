@@ -19,7 +19,7 @@ package org.apache.lucene.search;
 
 import java.io.IOException;
 
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.TermPositions;
 
 /** Expert: Scoring functionality for phrase queries.
  * <br>A document is considered matching if it contains the phrase-query terms  

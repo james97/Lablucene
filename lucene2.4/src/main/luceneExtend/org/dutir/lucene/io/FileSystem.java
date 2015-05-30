@@ -25,8 +25,8 @@
  */
 package org.dutir.lucene.io;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /** This is the Terrier File Abstraction Layer interface depicting the operations available for a file system.
  * @since 2.1

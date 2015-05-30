@@ -5,7 +5,6 @@ package org.apache.lucene.search.model;
 
 import gnu.trove.TObjectFloatHashMap;
 import gnu.trove.TObjectFloatIterator;
-import gnu.trove.TObjectIntIterator;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -13,16 +12,15 @@ import java.util.Iterator;
 
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexReader.FieldOption;
 import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.index.IndexReader.FieldOption;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.store.IndexOutput;
-import org.apache.lucene.util.BitUtil;
 import org.dutir.lucene.ISManager;
 import org.dutir.util.NumConversions;
 

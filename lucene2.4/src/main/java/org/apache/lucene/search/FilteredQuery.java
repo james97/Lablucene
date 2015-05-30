@@ -17,11 +17,11 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.util.ToStringUtils;
-
 import java.io.IOException;
 import java.util.Set;
+
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.util.ToStringUtils;
 
 
 /**

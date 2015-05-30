@@ -15,9 +15,9 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
-import org.apache.lucene.index.IndexReader;
-
 import java.io.IOException;
+
+import org.apache.lucene.index.IndexReader;
 
 /** Abstract base class providing a mechanism to restrict searches to a subset
  of an index and also maintains and returns position information.

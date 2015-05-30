@@ -17,12 +17,12 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
+import java.io.IOException;
+import java.util.Arrays;
+
 import org.apache.lucene.store.BufferedIndexInput;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.IndexInput;
-
-import java.io.IOException;
-import java.util.Arrays;
 
 /**
  * @version $Id: TermVectorsReader.java 687046 2008-08-19 13:01:11Z mikemccand $

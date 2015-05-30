@@ -17,10 +17,10 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
-import org.apache.lucene.index.TermPositions;
-
 import java.io.IOException;
 import java.util.HashMap;
+
+import org.apache.lucene.index.TermPositions;
 
 final class RSloppyPhraseScorer extends RPhraseScorer {
     private int slop;

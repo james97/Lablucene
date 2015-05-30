@@ -17,29 +17,29 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Similarity;
+import org.apache.lucene.store.AlreadyClosedException;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.Lock;
 import org.apache.lucene.store.LockObtainFailedException;
-import org.apache.lucene.store.AlreadyClosedException;
 import org.apache.lucene.util.BitVector;
 import org.apache.lucene.util.Constants;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.List;
-import java.util.Collection;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Iterator;
 
 /**
   An <code>IndexWriter</code> creates and maintains an index.

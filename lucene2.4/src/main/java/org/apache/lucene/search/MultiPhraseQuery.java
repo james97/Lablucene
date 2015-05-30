@@ -18,13 +18,16 @@ package org.apache.lucene.search;
  */
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultipleTermPositions;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermPositions;
-import org.apache.lucene.search.Query;
 import org.apache.lucene.util.ToStringUtils;
 
 /**

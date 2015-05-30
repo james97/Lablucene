@@ -17,11 +17,10 @@ package org.apache.lucene.search.function;
  * limitations under the License.
  */
 
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.function.DocValues;
-
 import java.io.IOException;
 import java.io.Serializable;
+
+import org.apache.lucene.index.IndexReader;
 
 /**
  * Expert: source of values for basic function queries.

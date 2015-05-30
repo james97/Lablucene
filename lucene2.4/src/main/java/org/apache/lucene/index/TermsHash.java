@@ -17,13 +17,13 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.HashSet;
-import java.util.Arrays;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.lucene.util.ArrayUtil;
 

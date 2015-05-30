@@ -17,15 +17,14 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
-import org.apache.lucene.search.Filter;
-import org.apache.lucene.util.OpenBitSet;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.index.TermDocs;
-
-import java.util.BitSet;
 import java.io.IOException;
+import java.util.BitSet;
+
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermDocs;
+import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.util.OpenBitSet;
 
 /**
  *

@@ -20,9 +20,9 @@ package org.apache.lucene.search;
 import java.io.IOException;
 import java.text.Collator;
 
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.util.ToStringUtils;
 
 /**

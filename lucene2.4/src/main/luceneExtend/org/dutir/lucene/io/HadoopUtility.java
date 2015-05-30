@@ -43,7 +43,6 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.log4j.Logger;
-
 import org.dutir.lucene.util.ApplicationSetup;
 import org.dutir.lucene.util.Files;
 

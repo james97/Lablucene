@@ -1,7 +1,6 @@
 package org.apache.lucene.postProcess;
 
 import gnu.trove.TObjectFloatHashMap;
-import gnu.trove.TObjectIntHashMap;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -17,8 +16,8 @@ import org.apache.lucene.search.model.WeightModelManager;
 import org.apache.lucene.search.model.WeightingModel;
 import org.dutir.lucene.util.ApplicationSetup;
 import org.dutir.lucene.util.ExpansionTerms;
-import org.dutir.lucene.util.TermsCache;
 import org.dutir.lucene.util.ExpansionTerms.ExpansionTerm;
+import org.dutir.lucene.util.TermsCache;
 
 /**
  * Fun: expand the query based on Terrier's build-in QE method, and then use the

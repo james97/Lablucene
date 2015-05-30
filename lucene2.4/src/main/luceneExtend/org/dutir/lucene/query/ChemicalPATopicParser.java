@@ -7,7 +7,6 @@ import gnu.trove.TObjectFloatHashMap;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
 
@@ -18,12 +17,12 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.AnalyzerManager;
 import org.apache.lucene.search.RBooleanClause;
+import org.apache.lucene.search.RBooleanClause.Occur;
 import org.apache.lucene.search.RBooleanQuery;
 import org.apache.lucene.search.RConstantScoreRangeQuery;
 import org.apache.lucene.search.RQuery;
 import org.apache.lucene.search.RTermQuery;
 import org.apache.lucene.search.Searcher;
-import org.apache.lucene.search.RBooleanClause.Occur;
 import org.apache.lucene.search.model.Idf;
 import org.dutir.lucene.ISManager;
 import org.dutir.lucene.util.ApplicationSetup;

@@ -1,7 +1,6 @@
 package org.apache.lucene.postProcess;
 
 import org.apache.lucene.search.model.Idf;
-import org.dutir.lucene.util.ApplicationSetup;
 
 public class Lemur_TFIDF extends QueryExpansionModel {
 

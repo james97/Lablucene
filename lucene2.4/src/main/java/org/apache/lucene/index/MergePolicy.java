@@ -17,12 +17,12 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
-import org.apache.lucene.store.Directory;
-
 import java.io.IOException;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+
+import org.apache.lucene.store.Directory;
 
 /**
  * <p>Expert: a MergePolicy determines the sequence of

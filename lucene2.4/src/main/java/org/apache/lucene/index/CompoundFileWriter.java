@@ -17,13 +17,14 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.IndexOutput;
-import org.apache.lucene.store.IndexInput;
-import java.util.LinkedList;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.io.IOException;
+import java.util.LinkedList;
+
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.IndexInput;
+import org.apache.lucene.store.IndexOutput;
 
 
 /**

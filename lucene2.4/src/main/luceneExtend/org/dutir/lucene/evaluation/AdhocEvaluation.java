@@ -26,8 +26,12 @@
  *   Vassilis Plachouras <vassilis{a.}dcs.gla.ac.uk>
  */
 package org.dutir.lucene.evaluation;
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.StringTokenizer;
+import java.util.Vector;
+
 import org.apache.log4j.Logger;
 import org.dutir.lucene.util.ApplicationSetup;
 import org.dutir.lucene.util.Files;

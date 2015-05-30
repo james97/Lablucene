@@ -17,11 +17,11 @@ package org.apache.lucene.analysis;
  * limitations under the License.
  */
 
-import java.io.Reader;
 import java.io.IOException;
+import java.io.Reader;
 
-import org.apache.lucene.util.CloseableThreadLocal;
 import org.apache.lucene.store.AlreadyClosedException;
+import org.apache.lucene.util.CloseableThreadLocal;
 
 /** An Analyzer builds TokenStreams, which analyze text.  It thus represents a
  *  policy for extracting index terms from text.

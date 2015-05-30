@@ -17,12 +17,12 @@ package org.apache.lucene.document;
  * limitations under the License.
  */
 
+import java.io.Reader;
+import java.io.Serializable;
+
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.index.IndexWriter;   // for javadoc
 import org.apache.lucene.util.Parameter;
-
-import java.io.Reader;
-import java.io.Serializable;
 
 /**
   A field is a section of a Document.  Each field has two parts, a name and a

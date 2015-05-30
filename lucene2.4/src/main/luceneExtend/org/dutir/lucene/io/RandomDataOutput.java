@@ -24,8 +24,8 @@
  *   Craig Macdonald (craigm{at}dcs.gla.ac.uk)
  */
 package org.dutir.lucene.io;
-import java.io.IOException;
 import java.io.DataOutput;
+import java.io.IOException;
 
 public interface RandomDataOutput extends DataOutput, RandomDataInput
 {

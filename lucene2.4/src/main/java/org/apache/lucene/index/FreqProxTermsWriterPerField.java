@@ -18,8 +18,9 @@ package org.apache.lucene.index;
  */
 
 import java.io.IOException;
-import org.apache.lucene.document.Fieldable;
+
 import org.apache.lucene.analysis.Token;
+import org.apache.lucene.document.Fieldable;
 
 // TODO: break into separate freq and prox writers as
 // codecs; make separate container (tii/tis/skip/*) that can

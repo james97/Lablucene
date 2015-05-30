@@ -17,8 +17,9 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
-import org.apache.lucene.index.IndexReader;
 import java.io.IOException;
+
+import org.apache.lucene.index.IndexReader;
 
 /**
  * Expert: Maintains caches of term values.

@@ -17,11 +17,11 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
-import org.apache.lucene.store.Directory;
-
 import java.io.IOException;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.lucene.store.Directory;
 
 /** A {@link MergeScheduler} that runs each merge using a
  *  separate thread, up until a maximum number of threads

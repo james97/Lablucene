@@ -5,10 +5,7 @@ import java.util.List;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.RMultiFieldQueryParser;
-import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.RBooleanQuery;
-import org.apache.lucene.search.RConstantScoreRangeQuery;
-import org.apache.lucene.search.RQuery;
 import org.dutir.lucene.util.ApplicationSetup;
 
 import com.google.common.collect.Lists;

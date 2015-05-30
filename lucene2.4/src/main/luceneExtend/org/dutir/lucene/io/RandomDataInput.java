@@ -24,8 +24,8 @@
  *   Craig Macdonald (craigm{at}dcs.gla.ac.uk)
  */
 package org.dutir.lucene.io;
-import java.io.IOException;
 import java.io.DataInput;
+import java.io.IOException;
 
 public interface RandomDataInput extends DataInput, java.io.Closeable
 {

@@ -17,13 +17,11 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Iterator;
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.apache.lucene.document.SetBasedFieldSelector;
 import org.apache.lucene.util.ScorerDocQueue;
 import org.dutir.lucene.util.ApplicationSetup;
 

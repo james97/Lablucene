@@ -1,6 +1,10 @@
 package org.apache.lucene.index;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * Copyright 2007 The Apache Software Foundation

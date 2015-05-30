@@ -16,20 +16,6 @@
 
 package org.apache.lucene.postProcess.termselector;
 
-import com.aliasi.corpus.ObjectHandler;
-
-import com.aliasi.symbol.SymbolTable;
-
-import com.aliasi.tokenizer.Tokenizer;
-import com.aliasi.tokenizer.TokenizerFactory;
-
-import com.aliasi.stats.Statistics;
-
-import com.aliasi.util.Math;
-import com.aliasi.util.Iterators;
-import com.aliasi.util.ObjectToCounterMap;
-import com.aliasi.util.Strings;
-
 // import java.util.Arrays;
 import gnu.trove.TIntHashSet;
 
@@ -41,7 +27,16 @@ import java.util.Random;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.dutir.lucene.util.Rounding;
+
+import com.aliasi.corpus.ObjectHandler;
+import com.aliasi.stats.Statistics;
+import com.aliasi.symbol.SymbolTable;
+import com.aliasi.tokenizer.Tokenizer;
+import com.aliasi.tokenizer.TokenizerFactory;
+import com.aliasi.util.Iterators;
+import com.aliasi.util.Math;
+import com.aliasi.util.ObjectToCounterMap;
+import com.aliasi.util.Strings;
 
 public class LatentDirichletAllocation {
 

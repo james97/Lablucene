@@ -17,12 +17,12 @@ package org.apache.lucene.search.spans;
  * limitations under the License.
  */
 
+import java.io.IOException;
+
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Weight;
-
-import java.io.IOException;
 
 /**
  * Public for extension only.

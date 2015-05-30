@@ -18,6 +18,7 @@ package org.apache.lucene.store;
  */
 
 import java.io.IOException;
+
 import org.apache.lucene.util.UnicodeUtil;
 
 /** Abstract base class for output to a file in a Directory.  A random-access

@@ -17,18 +17,18 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
-import org.apache.lucene.store.Directory;
-
-import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Collection;
+import java.util.Map;
+
+import org.apache.lucene.store.Directory;
 
 /*
  * This class keeps track of each SegmentInfos instance that

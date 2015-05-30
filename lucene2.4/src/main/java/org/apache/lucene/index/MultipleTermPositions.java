@@ -17,13 +17,13 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
-import org.apache.lucene.util.PriorityQueue;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.apache.lucene.util.PriorityQueue;
 
 /**
  * Describe class <code>MultipleTermPositions</code> here.

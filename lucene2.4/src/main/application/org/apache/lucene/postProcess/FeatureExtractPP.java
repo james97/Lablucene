@@ -1,6 +1,7 @@
 package org.apache.lucene.postProcess;
 
-import java.io.BufferedOutputStream;
+import gnu.trove.TIntDoubleHashMap;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -20,11 +21,8 @@ import org.dutir.lucene.util.ApplicationSetup;
 import org.dutir.lucene.util.ExpansionTerms;
 import org.dutir.lucene.util.TermsCache;
 import org.dutir.lucene.util.TermsCache.Item;
-import org.dutir.util.AbstractExternalizable;
 import org.dutir.util.Arrays;
 import org.dutir.util.stream.StreamGenerator;
-
-import gnu.trove.TIntDoubleHashMap;
 
 /**
  * used for sigir13 Feature Extraction for Document Quality Estimation.

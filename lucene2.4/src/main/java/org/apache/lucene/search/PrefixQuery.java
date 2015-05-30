@@ -19,9 +19,9 @@ package org.apache.lucene.search;
 
 import java.io.IOException;
 
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.util.ToStringUtils;
 
 /** A Query that matches documents containing terms with a specified prefix. A PrefixQuery

@@ -11,15 +11,14 @@ import java.util.HashMap;
 
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.TermFreqVector;
-import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.RBooleanClause;
 import org.apache.lucene.search.RBooleanQuery;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.TopDocCollector;
 import org.dutir.lucene.util.ApplicationSetup;
-import org.dutir.lucene.util.TermsCache;
 import org.dutir.lucene.util.ExpansionTerms.ExpansionTerm;
+import org.dutir.lucene.util.TermsCache;
 
 /**
  * @author yezheng

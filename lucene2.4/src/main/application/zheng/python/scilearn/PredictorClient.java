@@ -1,7 +1,5 @@
 package zheng.python.scilearn;
 
-import java.io.IOException;
-
 import com.bitmechanic.barrister.HttpTransport;
 
 /**

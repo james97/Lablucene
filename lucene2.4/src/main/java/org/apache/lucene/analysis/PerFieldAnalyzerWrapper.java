@@ -17,10 +17,10 @@ package org.apache.lucene.analysis;
  * limitations under the License.
  */
 
-import java.io.Reader;
 import java.io.IOException;
-import java.util.Map;
+import java.io.Reader;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This analyzer is used to facilitate scenarios where different

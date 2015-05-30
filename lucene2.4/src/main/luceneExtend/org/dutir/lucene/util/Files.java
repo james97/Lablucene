@@ -24,29 +24,33 @@
  *  Craig Macdonald craigm{a}dcs.gla.ac.uk (original author)
  */
 package org.dutir.lucene.util;
-import org.dutir.lucene.io.*;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.io.FileNotFoundException;
-
 import java.util.zip.CRC32;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.HashMap;
+
+import org.dutir.lucene.io.FileSystem;
+import org.dutir.lucene.io.HTTPFileSystem;
+import org.dutir.lucene.io.LocalFileSystem;
+import org.dutir.lucene.io.RandomDataInput;
+import org.dutir.lucene.io.RandomDataOutput;
 
 /** Utililty class for opening readers/writers and input/output streams to files. Handles gzipped files
   * on the fly, ie if a file ends in ".gz" or ".GZ", then it will be opened using a GZipInputStream/GZipOutputStream.

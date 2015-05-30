@@ -8,7 +8,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.TopDocs;
-import org.dutir.lucene.parser.SocialTagParser;
 
 public class IndexUtility {
 	static Logger logger = Logger.getLogger(IndexUtility.class);

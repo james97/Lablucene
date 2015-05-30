@@ -2,7 +2,6 @@ package org.apache.lucene.search.model;
 
 import org.dutir.lucene.util.ApplicationSetup;
 import org.dutir.lucene.util.Rounding;
-import org.dutir.util.Math;
 
 /**
  * @author Zheng Ye E-mail: yezh0716 {at} gmail.com

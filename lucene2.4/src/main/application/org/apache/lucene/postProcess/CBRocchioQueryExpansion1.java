@@ -18,8 +18,8 @@ import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.TopDocCollector;
 import org.dutir.lucene.util.ApplicationSetup;
 import org.dutir.lucene.util.ExpansionTerms;
-import org.dutir.lucene.util.TermsCache;
 import org.dutir.lucene.util.ExpansionTerms.ExpansionTerm;
+import org.dutir.lucene.util.TermsCache;
 
 /**
  * Context based Rocchio Query expansion (Pseudo)

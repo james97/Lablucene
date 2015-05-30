@@ -1,8 +1,8 @@
 package org.apache.lucene.postProcess;
 
-import java.io.IOException;
-
 import gnu.trove.TIntDoubleHashMap;
+
+import java.io.IOException;
 
 import org.apache.lucene.search.RBooleanQuery;
 import org.apache.lucene.search.Searcher;

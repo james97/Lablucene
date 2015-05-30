@@ -1,11 +1,6 @@
 package org.apache.lucene.postProcess;
 
 
-import gnu.trove.TIntHash;
-import gnu.trove.TIntHashSet;
-import gnu.trove.TIntIntHashMap;
-import gnu.trove.TObjectHash;
-import gnu.trove.TObjectHashingStrategy;
 import gnu.trove.TObjectIntHashMap;
 
 import java.io.IOException;
@@ -27,12 +22,9 @@ import org.dutir.lucene.util.ExpansionTerms;
 import org.dutir.lucene.util.ExpansionTerms.ExpansionTerm;
 
 import weka.classifiers.Classifier;
-import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.functions.LibSVM;
 import weka.classifiers.functions.SMOreg;
-import weka.classifiers.functions.Winnow;
-import weka.classifiers.functions.supportVector.Kernel;
 import weka.classifiers.functions.supportVector.NormalizedPolyKernel;
 import weka.core.Attribute;
 import weka.core.FastVector;

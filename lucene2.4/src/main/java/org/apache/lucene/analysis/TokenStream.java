@@ -17,9 +17,9 @@ package org.apache.lucene.analysis;
  * limitations under the License.
  */
 
-import org.apache.lucene.index.Payload;
-
 import java.io.IOException;
+
+import org.apache.lucene.index.Payload;
 
 /** A TokenStream enumerates the sequence of tokens, either from
   fields of a document or from query text.

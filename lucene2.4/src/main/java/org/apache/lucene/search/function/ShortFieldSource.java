@@ -17,11 +17,10 @@ package org.apache.lucene.search.function;
  * limitations under the License.
  */
 
+import java.io.IOException;
+
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.FieldCache;
-import org.apache.lucene.search.function.DocValues;
-
-import java.io.IOException;
 
 /**
  * Expert: obtains short field values from the 

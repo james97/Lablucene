@@ -17,11 +17,11 @@ package org.apache.lucene.store;
  * limitations under the License.
  */
 
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
-import java.io.File;
-import java.io.RandomAccessFile;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Random;
 

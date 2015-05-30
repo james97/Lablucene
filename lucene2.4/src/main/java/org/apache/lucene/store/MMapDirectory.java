@@ -17,8 +17,8 @@ package org.apache.lucene.store;
  * limitations under the License.
  */
  
-import java.io.IOException;
 import java.io.File;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;

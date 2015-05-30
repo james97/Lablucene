@@ -6,12 +6,10 @@ package org.apache.lucene.queryParser;
 import java.util.List;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.RTermQuery;
-import org.apache.lucene.search.TermQuery;
 
 /**
  * @author yezheng

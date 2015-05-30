@@ -20,8 +20,8 @@ package org.apache.lucene.index;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.analysis.Token;
+import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.util.UnicodeUtil;
 
 final class TermsHashPerField extends InvertedDocConsumerPerField {

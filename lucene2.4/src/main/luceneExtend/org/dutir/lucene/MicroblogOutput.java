@@ -1,13 +1,10 @@
 package org.dutir.lucene;
 
 import java.io.PrintWriter;
-import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
 
 import org.apache.log4j.Logger;
 import org.apache.lucene.OutputFormat;
-import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.TopDocCollector;

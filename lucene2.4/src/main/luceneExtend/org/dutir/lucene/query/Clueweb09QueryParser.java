@@ -10,11 +10,6 @@ import java.util.ArrayList;
 import java.util.Vector;
 
 import org.apache.log4j.Logger;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.queryParser.RMultiFieldQueryParser;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.RBooleanQuery;
 import org.dutir.lucene.util.ApplicationSetup;
 import org.dutir.lucene.util.Files;
 

@@ -17,10 +17,10 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
-import org.apache.lucene.index.IndexReader;
-
 import java.io.IOException;
 import java.text.Collator;
+
+import org.apache.lucene.index.IndexReader;
 
 /**
  * A range query that returns a constant score equal to its boost for

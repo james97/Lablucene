@@ -17,8 +17,8 @@ package org.apache.lucene.store;
  * limitations under the License.
  */
 
-import java.util.ArrayList;
 import java.io.Serializable;
+import java.util.ArrayList;
 
 class RAMFile implements Serializable {
 

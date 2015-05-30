@@ -17,15 +17,15 @@ package org.apache.lucene.search.spans;
  * limitations under the License.
  */
 
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.util.PriorityQueue;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.HashSet;
+
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.util.PriorityQueue;
 
 class NearSpansUnordered implements PayloadSpans {
   private SpanNearQuery query;

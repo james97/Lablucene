@@ -17,12 +17,12 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
-import java.util.Map;
+import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Collection;
 import java.util.Iterator;
-import java.io.IOException;
+import java.util.Map;
 
 /** This is a DocFieldConsumer that inverts each field,
  *  separately, from a Document, and accepts a

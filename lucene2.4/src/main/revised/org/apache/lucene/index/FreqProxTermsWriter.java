@@ -17,17 +17,17 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
-import org.apache.lucene.store.IndexOutput;
-import org.apache.lucene.store.IndexInput;
-import org.apache.lucene.util.UnicodeUtil;
-
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.lucene.store.IndexInput;
+import org.apache.lucene.store.IndexOutput;
+import org.apache.lucene.util.UnicodeUtil;
 
 final class FreqProxTermsWriter extends TermsHashConsumer {
 

@@ -13,10 +13,9 @@ import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.index.TermPositionVector;
 import org.apache.lucene.postProcess.QueryExpansionModel;
 import org.apache.lucene.search.model.Idf;
-
 import org.dutir.lucene.util.ApplicationSetup;
-import org.dutir.lucene.util.Rounding;
 import org.dutir.lucene.util.ExpansionTerms.ExpansionTerm;
+import org.dutir.lucene.util.Rounding;
 import org.dutir.lucene.util.TermsCache.Item;
 
 /**

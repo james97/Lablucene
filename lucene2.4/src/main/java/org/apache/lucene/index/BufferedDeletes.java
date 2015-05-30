@@ -17,10 +17,10 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
-import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 
 /** Holds buffered deletes, by docID, term or query.  We

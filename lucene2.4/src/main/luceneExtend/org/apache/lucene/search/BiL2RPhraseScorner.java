@@ -3,13 +3,9 @@ package org.apache.lucene.search;
 import java.io.IOException;
 
 import org.apache.lucene.index.TermPositions;
-import org.apache.lucene.search.Similarity;
-import org.apache.lucene.search.Weight;
 import org.apache.lucene.search.model.Idf;
-import org.dutir.lucene.util.ApplicationSetup;
 import org.dutir.lucene.util.Distance;
 import org.dutir.math.function.GammaFunction;
-import org.dutir.math.function.WikipediaGammaFunction;
 
 /**
  * @author zheng

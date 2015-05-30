@@ -27,8 +27,9 @@
  */
 package org.dutir.lucene.evaluation;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+
 import org.apache.log4j.Logger;
 import org.dutir.lucene.util.Files;
 /**

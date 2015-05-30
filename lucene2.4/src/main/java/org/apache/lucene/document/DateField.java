@@ -17,10 +17,10 @@ package org.apache.lucene.document;
  * limitations under the License.
  */
 
+import java.util.Date;   // for javadoc
+
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.RangeQuery;
-
-import java.util.Date;   // for javadoc
 
 /**
  * Provides support for converting dates to strings and vice-versa.

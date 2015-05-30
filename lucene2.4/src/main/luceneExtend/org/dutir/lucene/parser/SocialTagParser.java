@@ -10,9 +10,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
 
 import org.apache.log4j.Logger;
 import org.apache.lucene.document.Document;
@@ -22,10 +20,8 @@ import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.Field.TermVector;
 import org.apache.lucene.index.IndexWriter;
 import org.dutir.util.Digester;
-import org.dutir.util.Strings;
 import org.dutir.util.dom.DomNodeUtils;
 import org.dutir.util.net.HttpDocument;
-import org.dutir.util.stream.StreamManager;
 
 /**
  * @author zheng

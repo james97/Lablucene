@@ -17,14 +17,18 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.store.IndexOutput;
-
-import java.io.IOException;
-import java.util.*;
 
 /** Access to the Fieldable Info file that describes document fields and whether or
  *  not they are indexed. Each segment has a separate Fieldable Info file. Objects

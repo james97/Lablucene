@@ -7,7 +7,6 @@ import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
 import org.apache.lucene.queryParser.AnalyzerManager;
-import org.dutir.lucene.TRECQuerying;
 
 public class GeneralAnalyzer extends Analyzer {
 	protected static final Logger logger = Logger.getLogger(GeneralAnalyzer.class);

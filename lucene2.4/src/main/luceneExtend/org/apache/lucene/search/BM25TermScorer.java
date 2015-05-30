@@ -25,10 +25,6 @@ import java.io.IOException;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.search.Explanation;
-import org.apache.lucene.search.Scorer;
-import org.apache.lucene.search.Similarity;
-import org.apache.lucene.search.TermQuery;
 import org.ninit.models.bm25.BM25Parameters;
 
 /**

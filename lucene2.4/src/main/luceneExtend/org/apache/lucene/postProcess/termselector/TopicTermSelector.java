@@ -3,7 +3,6 @@
  */
 package org.apache.lucene.postProcess.termselector;
 
-import gnu.trove.TIntHashSet;
 import gnu.trove.TObjectIntHashMap;
 
 import java.io.IOException;
@@ -19,9 +18,9 @@ import org.apache.lucene.postProcess.QueryExpansionModel;
 import org.apache.lucene.postProcess.termselector.LatentDirichletAllocation.GibbsSample;
 import org.apache.lucene.search.model.Idf;
 import org.dutir.lucene.util.ApplicationSetup;
+import org.dutir.lucene.util.ExpansionTerms.ExpansionTerm;
 import org.dutir.lucene.util.Rounding;
 import org.dutir.lucene.util.TermsCache;
-import org.dutir.lucene.util.ExpansionTerms.ExpansionTerm;
 import org.dutir.util.Arrays;
 import org.dutir.util.Normalizer;
 import org.dutir.util.symbol.MapSymbolTable;

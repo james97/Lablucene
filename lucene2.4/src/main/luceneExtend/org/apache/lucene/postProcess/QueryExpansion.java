@@ -16,6 +16,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.RBooleanClause;
+import org.apache.lucene.search.RBooleanClause.Occur;
 import org.apache.lucene.search.RBooleanQuery;
 import org.apache.lucene.search.RQuery;
 import org.apache.lucene.search.RTermQuery;
@@ -23,12 +24,11 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.TopDocCollector;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.search.RBooleanClause.Occur;
 import org.apache.lucene.search.model.Idf;
 import org.dutir.lucene.util.ApplicationSetup;
 import org.dutir.lucene.util.ExpansionTerms;
-import org.dutir.lucene.util.TermsCache;
 import org.dutir.lucene.util.ExpansionTerms.ExpansionTerm;
+import org.dutir.lucene.util.TermsCache;
 import org.dutir.lucene.util.TermsCache.Item;
 
 /**

@@ -18,15 +18,15 @@ package org.apache.lucene.index;
  */
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
-import org.apache.lucene.store.IndexOutput;
 import org.apache.lucene.search.Similarity;
+import org.apache.lucene.store.IndexOutput;
 
 // TODO FI: norms could actually be stored as doc store
 

@@ -17,10 +17,10 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
-import org.apache.lucene.index.IndexReader;
-
 import java.io.IOException;
 import java.util.Set;
+
+import org.apache.lucene.index.IndexReader;
 
 /**
  * A query that wraps a filter and simply returns a constant score equal to the

@@ -17,8 +17,9 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
-import java.util.Map;
 import java.io.IOException;
+import java.util.Map;
+
 import org.apache.lucene.store.RAMOutputStream;
 import org.apache.lucene.util.ArrayUtil;
 

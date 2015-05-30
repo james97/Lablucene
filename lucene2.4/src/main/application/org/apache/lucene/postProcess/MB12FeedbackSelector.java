@@ -1,9 +1,8 @@
 package org.apache.lucene.postProcess;
 
-import java.util.Arrays;
-
 import gnu.trove.TIntArrayList;
-import gnu.trove.TIntHashSet;
+
+import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 import org.apache.lucene.search.ScoreDoc;

@@ -17,12 +17,12 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.util.PriorityQueue;
-
 import java.io.IOException;
 import java.text.Collator;
 import java.util.Locale;
+
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.util.PriorityQueue;
 
 /**
  * Expert: A hit queue for sorting by hits by terms in more than one field.

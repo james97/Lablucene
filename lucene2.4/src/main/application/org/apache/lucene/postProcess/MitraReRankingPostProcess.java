@@ -4,8 +4,6 @@ import gnu.trove.TIntArrayList;
 import gnu.trove.TObjectFloatHashMap;
 import gnu.trove.TObjectIntHashMap;
 
-import java.io.IOException;
-
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.search.RBooleanQuery;

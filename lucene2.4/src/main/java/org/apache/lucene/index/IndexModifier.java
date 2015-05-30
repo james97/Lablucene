@@ -17,15 +17,15 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.LockObtainFailedException;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
 
 /**
  * <p>[Note that as of <b>2.1</b>, all but one of the

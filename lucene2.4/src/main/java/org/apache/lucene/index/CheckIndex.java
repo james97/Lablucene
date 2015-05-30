@@ -17,19 +17,19 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
-import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.IndexInput;
-import org.apache.lucene.document.Document;
-
-import java.text.NumberFormat;
-import java.io.PrintStream;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
+
+import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Fieldable;          // for javadoc
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.IndexInput;
 
 /**
  * Basic tool and API to check the health of an index and

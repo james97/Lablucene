@@ -17,8 +17,8 @@ package org.apache.lucene.analysis;
  * limitations under the License.
  */
 
-import java.io.Reader;
 import java.io.IOException;
+import java.io.Reader;
 
 /** A Tokenizer is a TokenStream whose input is a Reader.
   <p>

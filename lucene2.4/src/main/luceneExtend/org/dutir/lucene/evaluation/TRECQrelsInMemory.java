@@ -29,7 +29,6 @@ package org.dutir.lucene.evaluation;
 
 import gnu.trove.THashSet;
 import gnu.trove.TIntHashSet;
-import gnu.trove.TIntIntHashMap;
 import gnu.trove.TIntObjectHashMap;
 
 import java.io.BufferedReader;

@@ -20,10 +20,9 @@ package org.apache.lucene.search;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
+import org.apache.lucene.document.Document;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.document.Document;
-import org.dutir.lucene.ISManager;
 
 /** An abstract base class for search implementations.
  * Implements the main search methods.

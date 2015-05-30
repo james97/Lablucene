@@ -17,8 +17,8 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
-import org.apache.lucene.util.ArrayUtil;
 import org.apache.lucene.search.Similarity;
+import org.apache.lucene.util.ArrayUtil;
 
 /** Taps into DocInverter, as an InvertedDocEndConsumer,
  *  which is called at the end of inverting each field.  We

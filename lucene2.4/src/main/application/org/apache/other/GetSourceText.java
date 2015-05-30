@@ -5,23 +5,19 @@ package org.apache.other;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.index.TermPositionVector;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.dutir.lucene.ISManager;
-import org.dutir.lucene.evaluation.TRECQrelsInMemory;
 import org.dutir.lucene.util.ApplicationSetup;
 import org.dutir.lucene.util.Files;
 import org.dutir.util.Arrays;
-import org.dutir.util.Strings;
 import org.dutir.util.stream.StreamGenerator;
 
 /**

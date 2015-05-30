@@ -18,7 +18,8 @@ package org.apache.lucene.search;
  */
 
 import java.io.IOException;
-import org.apache.lucene.index.*;
+
+import org.apache.lucene.index.TermPositions;
 
 /**
  * Position of a term in a document that takes into account the term offset within the phrase. 

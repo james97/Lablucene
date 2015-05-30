@@ -16,10 +16,10 @@ package org.apache.lucene.document;
  * limitations under the License.
  */
 
-import org.apache.lucene.analysis.TokenStream;
-
 import java.io.Reader;
 import java.io.Serializable;
+
+import org.apache.lucene.analysis.TokenStream;
 
 /**
  * Synonymous with {@link Field}.

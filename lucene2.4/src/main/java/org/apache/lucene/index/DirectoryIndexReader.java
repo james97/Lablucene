@@ -17,18 +17,17 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
-import java.io.IOException;
 import java.io.FileNotFoundException;
-
-import java.util.HashSet;
-import java.util.Collection;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.Lock;
 import org.apache.lucene.store.LockObtainFailedException;
-import org.apache.lucene.store.FSDirectory;
 
 /**
  * IndexReader implementation that has access to a Directory. 
