@@ -220,4 +220,62 @@ public class MetricsUtils {
         }
         return sum;
     }
+    
+    public static double cosine_similarity(float[] vec1, float[] vec2) { 
+        double dp = dot_product(vec1,vec2); 
+        double magnitudeA = find_magnitude(vec1); 
+        double magnitudeB = find_magnitude(vec2); 
+        return (dp)/(magnitudeA*magnitudeB); 
+    } 
+	
+	   public static  double cosine_similarity(double[] vec1, double[] vec2) { 
+	        double dp = dot_product(vec1,vec2); 
+	        double magnitudeA = find_magnitude(vec1); 
+	        double magnitudeB = find_magnitude(vec2); 
+	        return (dp)/(magnitudeA*magnitudeB); 
+	    } 
+	   
+	   public static double getCosineSimilarity(double[] vec1, double[] vec2) { 
+	        double dp = dot_product(vec1,vec2); 
+	        double magnitudeA = find_magnitude(vec1); 
+	        double magnitudeB = find_magnitude(vec2); 
+	        return (dp)/(magnitudeA*magnitudeB); 
+	    } 
+	   
+
+    public static double find_magnitude(float[] vec) { 
+        double sum_mag=0; 
+        for(int i=0;i<vec.length;i++) 
+        { 
+            sum_mag = sum_mag + vec[i]*vec[i]; 
+        } 
+        return Math.sqrt(sum_mag); 
+    } 
+    
+    public static  double find_magnitude(double[] vec) { 
+        double sum_mag=0; 
+        for(int i=0;i<vec.length;i++) 
+        { 
+            sum_mag = sum_mag + vec[i]*vec[i]; 
+        } 
+        return Math.sqrt(sum_mag); 
+    } 
+
+    public static double dot_product(float[] vec1, float[] vec2) { 
+        double sum=0; 
+        for(int i=0;i<vec1.length;i++) 
+        { 
+            sum = sum + vec1[i]*vec2[i]; 
+        } 
+        return sum; 
+    } 
+    
+    public static  double dot_product(double[] vec1, double[] vec2) { 
+        double sum=0; 
+        for(int i=0;i<vec1.length;i++) 
+        { 
+            sum = sum + vec1[i]*vec2[i]; 
+        } 
+        return sum; 
+    } 
 }

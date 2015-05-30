@@ -597,7 +597,7 @@ public class TopicBasedTermSelector extends TermSelector {
             	float [] termVector = this.vectorOfTerms.get(term);
             	for (int t = 0; t < qterms.length; t++){
             		float [] qtermVector = this.vectorOfTerms.get(qterms[t]);
-            		weight += cosine_similarity(termVector, qtermVector);
+            		weight += MetricsUtils.cosine_similarity(termVector, qtermVector);
             	}
             		weight /= qterms.length;
 
@@ -694,7 +694,7 @@ public class TopicBasedTermSelector extends TermSelector {
                 
                 double similarity = 0d;
                 for(int m = 0; m < qterms.length; m++){
-                    similarity += this.cosine_similarity(topicPro, qtermTopicProb[m]);
+                    similarity += MetricsUtils.cosine_similarity(topicPro, qtermTopicProb[m]);
                 }
 
                 similarity /= qterms.length;
@@ -726,14 +726,14 @@ public class TopicBasedTermSelector extends TermSelector {
             }
             
             System.out.println("Query is " + java.util.Arrays.toString(qterms));
-            java.util.Arrays.sort(termScores, TermDocScoreComparator);
+            java.util.Arrays.sort(termScores, TermScores.TermDocScoreComparator);
             for (int count = 0; (count < 50 && count < len); count++)
                 System.out.println(String.format("Doc Score of %d th term %s is %f ",
                         count, termScores[count].getTerm(), termScores[count].getDocScore()));
             
             System.out.println();
             System.out.println();
-            java.util.Arrays.sort(termScores, TermTopicScoreComparator);            
+            java.util.Arrays.sort(termScores, TermScores.TermTopicScoreComparator);            
             for (int count = 0; (count < 50 && count < len); count++)
                 System.out.println(String.format("Topic Score of %d th term %s is %f ",
                         count, termScores[count].getTerm(), termScores[count].getTopicScore()));
@@ -741,14 +741,14 @@ public class TopicBasedTermSelector extends TermSelector {
          
             System.out.println();
             System.out.println();
-            java.util.Arrays.sort(termScores, TermSimScoreComparator);
+            java.util.Arrays.sort(termScores, TermScores.TermSimScoreComparator);
             for (int count = 0; (count < 50 && count < len); count++)
                 System.out.println(String.format("Sim Score of %d th term %s is %f ",
                         count, termScores[count].getTerm(), termScores[count].getsimScore()));
                         
             System.out.println();
             System.out.println();            
-            java.util.Arrays.sort(termScores, TermDevScoreComparator);
+            java.util.Arrays.sort(termScores, TermScores.TermDevScoreComparator);
             for (int count = 0; (count < 50 && count < len); count++)
                 System.out.println(String.format("Dev Score of %d th term %s is %f ",
                         count, termScores[count].getTerm(), termScores[count].getDevScore()));
@@ -863,7 +863,7 @@ public class TopicBasedTermSelector extends TermSelector {
 	        case 10://doc similarity score
 	            for (int i = 3; i< feedDocNum; i++){
 	                for(int j = 0; j < 3; j++)
-	                    feedbackDocScores[i] += getCosineSimilarity(docTopicProbs[i], docTopicProbs[j]);
+	                    feedbackDocScores[i] += MetricsUtils.getCosineSimilarity(docTopicProbs[i], docTopicProbs[j]);
 	                
 	                feedbackDocScores[i] = (1 + (feedbackDocScores[i] - 1)/3)/2; //normalized to range 0-1
 	            }
@@ -912,235 +912,10 @@ public class TopicBasedTermSelector extends TermSelector {
 	}
 	
 	
-	private static double cosine_similarity(float[] vec1, float[] vec2) { 
-        double dp = dot_product(vec1,vec2); 
-        double magnitudeA = find_magnitude(vec1); 
-        double magnitudeB = find_magnitude(vec2); 
-        return (dp)/(magnitudeA*magnitudeB); 
-    } 
 	
-	   private  double cosine_similarity(double[] vec1, double[] vec2) { 
-	        double dp = dot_product(vec1,vec2); 
-	        double magnitudeA = find_magnitude(vec1); 
-	        double magnitudeB = find_magnitude(vec2); 
-	        return (dp)/(magnitudeA*magnitudeB); 
-	    } 
-	   
-	   private  double getCosineSimilarity(double[] vec1, double[] vec2) { 
-	        double dp = dot_product(vec1,vec2); 
-	        double magnitudeA = find_magnitude(vec1); 
-	        double magnitudeB = find_magnitude(vec2); 
-	        return (dp)/(magnitudeA*magnitudeB); 
-	    } 
-	   
-
-    private static double find_magnitude(float[] vec) { 
-        double sum_mag=0; 
-        for(int i=0;i<vec.length;i++) 
-        { 
-            sum_mag = sum_mag + vec[i]*vec[i]; 
-        } 
-        return Math.sqrt(sum_mag); 
-    } 
-    
-    private  double find_magnitude(double[] vec) { 
-        double sum_mag=0; 
-        for(int i=0;i<vec.length;i++) 
-        { 
-            sum_mag = sum_mag + vec[i]*vec[i]; 
-        } 
-        return Math.sqrt(sum_mag); 
-    } 
-
-    private static double dot_product(float[] vec1, float[] vec2) { 
-        double sum=0; 
-        for(int i=0;i<vec1.length;i++) 
-        { 
-            sum = sum + vec1[i]*vec2[i]; 
-        } 
-        return sum; 
-    } 
-    
-    private  double dot_product(double[] vec1, double[] vec2) { 
-        double sum=0; 
-        for(int i=0;i<vec1.length;i++) 
-        { 
-            sum = sum + vec1[i]*vec2[i]; 
-        } 
-        return sum; 
-    } 
-    
-    public class TermScores implements Comparable<TermScores>{
-        private String term;
-        private double docScore;
-        private double topicScore;
-        private double simScore;
-        private double devScore;
-        
-        
-        public TermScores(String term){
-            super();
-            this.term = term;
-            this.docScore = 0d;
-            this.topicScore = 0d;
-            this.simScore = 0d;
-            this.devScore = 0d;
-        }
-        /**
-         * @return the term
-         */
-        public String getTerm() {
-            return term;
-        }
-
-
-        /**
-         * @param term the term to set
-         */
-        public void setTerm(String term) {
-            this.term = term;
-        }
-
-
-        /**
-         * @return the docScore
-         */
-        public double getDocScore() {
-            return docScore;
-        }
-
-
-        /**
-         * @param docScore the docScore to set
-         */
-        public void setDocScore(double docScore) {
-            this.docScore = docScore;
-        }
-
-
-        /**
-         * @return the topicScore
-         */
-        public double getTopicScore() {
-            return topicScore;
-        }
-
-
-        /**
-         * @param topicScore the topicScore to set
-         */
-        public void setTopicScore(double topicScore) {
-            this.topicScore = topicScore;
-        }
-
-
-        /**
-         * @return the simScore
-         */
-        public double getsimScore() {
-            return simScore;
-        }
-
-
-        /**
-         * @param simScore the simScore to set
-         */
-        public void setsimScore(double simScore) {
-            this.simScore = simScore;
-        }
-
-
-        /**
-         * @return the devScore
-         */
-        public double getDevScore() {
-            return devScore;
-        }
-
-
-        /**
-         * @param devScore the devScore to set
-         */
-        public void setDevScore(double devScore) {
-            this.devScore = devScore;
-        }
-
-
-        
-        //alphabetical order by default
-        public int compareTo(TermScores other) {
-            return this.term.compareTo(other.term);
-            
-        }
-        
-        
-
-
-        /* (non-Javadoc)
-         * @see java.lang.Object#toString()
-         */
-        @Override
-        public String toString() {
-            return String.format("TermScores of %s are Doc: %f  Topic: %f"
-                    + " Similarity: %f Dev: %f \n", this.term, this.docScore, this.topicScore,
-                    this.simScore, this.devScore);
-        }
-        
-        
-    }
-    
-    private  Comparator<TermScores> TermDocScoreComparator = new Comparator<TermScores>() {
-
-        public int compare(TermScores TermScores1, TermScores TermScores2) {
-
-            double TermDocScores1 = TermScores1.getDocScore();
-            double TermDocScores2 = TermScores2.getDocScore();
-
-            // descending order
-            return -1 * Double.compare(TermDocScores1, TermDocScores2);
-        }
-
-    };
     
     
-    private  Comparator<TermScores> TermTopicScoreComparator = new Comparator<TermScores>() {
-
-        public int compare(TermScores TermScores1, TermScores TermScores2) {
-
-            double TermProbScores1 = TermScores1.getTopicScore();
-            double TermProbScores2 = TermScores2.getTopicScore();
-
-            // descending order
-            return -1 * Double.compare(TermProbScores1, TermProbScores2);
-        }
-
-    };
     
-    private  Comparator<TermScores> TermSimScoreComparator = new Comparator<TermScores>() {
-
-        public int compare(TermScores TermScores1, TermScores TermScores2) {
-
-            double TermSimScores1 = TermScores1.getsimScore();
-            double TermSimScores2 = TermScores2.getsimScore();
-
-            // descending order
-            return -1 * Double.compare(TermSimScores1, TermSimScores2);
-        }
-
-    };
-    
-    private  Comparator<TermScores> TermDevScoreComparator = new Comparator<TermScores>() {
-
-        public int compare(TermScores TermScores1, TermScores TermScores2) {
-
-            double TermDevScores1 = TermScores1.getDevScore();
-            double TermDevScores2 = TermScores2.getDevScore();
-
-            // descending order
-            return -1 * Double.compare(TermDevScores1, TermDevScores2);
-        }
-
-    };
 
 	/**
 	 * @param args
