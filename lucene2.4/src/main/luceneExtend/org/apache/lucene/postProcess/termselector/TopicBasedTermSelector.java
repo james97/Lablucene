@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -17,6 +18,7 @@ import java.util.Set;
 
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.apache.log4j.Logger;
+import org.apache.lucene.MetricsUtils;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
@@ -64,6 +66,8 @@ public class TopicBasedTermSelector extends TermSelector {
 			"TopicBasedTermSelector.beta", "0.3"));
 	static int winSize = Integer.parseInt(ApplicationSetup.getProperty(
 			"Association.winSize", "50"));
+	static boolean withOrgScore = Boolean.parseBoolean(ApplicationSetup.getProperty(
+            "TopicBasedTermSelector.withOrgScore", "false"));
 
 	static Random RANDOM = new Random(43);
 	static short NUM_TOPICS = Short.parseShort(ApplicationSetup.getProperty(
@@ -329,6 +333,7 @@ public class TopicBasedTermSelector extends TermSelector {
 		ExpansionTerm[] allTerms = new ExpansionTerm[SYMBOL_TABLE.numSymbols()];
 
 		int index[] = Arrays.indexSort(theta);
+		double[][] docTopicProbs = new double[sample.numDocuments()][sample.numTopics()];
 
 		if (logger.isDebugEnabled()) {
 			for (int i = 0; i < index.length; i++) {
@@ -359,6 +364,24 @@ public class TopicBasedTermSelector extends TermSelector {
 		int maxTopic = index[index.length - 1];
 		if (logger.isDebugEnabled())
 			logger.debug("max topic: " + maxTopic);
+		
+		 Iterator<String> it = originalQueryTermidSet.iterator();
+		 String[] qterms = new String[originalQueryTermidSet.size()];
+         int qCount = 0;
+         while (it.hasNext()) {
+                 qterms[qCount] = (String) it.next();
+                 qCount++;
+         }
+         
+         // get query terms topic probabilities
+         
+         double qtermTopicProb[][] = new double[qterms.length][index.length];
+         for(int m = 0; m < qterms.length; m++){
+             int id = SYMBOL_TABLE.symbolToID(qterms[m]);
+             for (int k = 0; k < index.length; k++)
+                 qtermTopicProb[m][k] = (float) sample.topicWordProb(index[k], id);
+         }
+     
 
 		if (strategy == 1) { // take advantage of the topic with the highest
 								// prob
@@ -479,14 +502,6 @@ public class TopicBasedTermSelector extends TermSelector {
 					float weight = 0;
 					IndexReader ir = this.searcher.getIndexReader();
 					int docInColl = ir.numDocs();
-					// get query terms
-					Iterator it = originalQueryTermidSet.iterator();
-					String[] qterms = new String[originalQueryTermidSet.size()];
-					int qCount = 0;
-					while (it.hasNext()) {
-						qterms[qCount] = (String) it.next();
-						qCount++;
-					}
 
 					// get query collection probability P(q)
 					double[] qCollProb = new double[qterms.length];
@@ -575,14 +590,7 @@ public class TopicBasedTermSelector extends TermSelector {
             	float weight = 0;
             	IndexReader ir = this.searcher.getIndexReader();
             	ir.numDocs();
-            	// get query terms
-            	Iterator it = originalQueryTermidSet.iterator();
-            	String[] qterms = new String[originalQueryTermidSet.size()];
-            	int qCount = 0;
-            	while (it.hasNext()) {
-            		qterms[qCount] = (String) it.next();
-            		qCount++;
-            	}
+    
 
             	//calculate the weight of a feedback term based on it's word2vec
             	//similarity to query terms
@@ -624,15 +632,6 @@ public class TopicBasedTermSelector extends TermSelector {
             	float weight = 0;
             	IndexReader ir = this.searcher.getIndexReader();
             	ir.numDocs();
-            	// get query terms
-            	Iterator it = originalQueryTermidSet.iterator();
-            	String[] qterms = new String[originalQueryTermidSet.size()];
-            	int qCount = 0;
-            	while (it.hasNext()) {
-            		qterms[qCount] = (String) it.next();
-            		qCount++;
-            	}
-
             	
 
             	if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
@@ -654,6 +653,162 @@ public class TopicBasedTermSelector extends TermSelector {
             	}
             }
 
+		}else if(strategy == 9){
+		    // Used for testing and printing useful information
+		    float totalweight = 0;
+            int feedbackNum = sample.numDocuments();
+            TermScores [] termScores = new TermScores[len];
+            for (int i = 0; i < len; i++) {
+                String term = SYMBOL_TABLE.idToSymbol(i);
+                termScores[i] = new TermScores(term);
+                TermsCache.Item item = getItem(term);
+                float TF = item.ctf;
+                float DF = item.df;
+                float weight = 0;
+
+                weight = 0;
+                // use probability in top 1 topic as original weight in one
+                // feedback doc, add all the score up and divide by the doc num
+                // then rank
+                for (int d = 0; d < feedbackNum; d++) {
+                    double docProb = sample.docWordCount(d, i)
+                            / (float) sample.documentLength(d);
+                    if (docProb == 0) {
+                        continue;
+                    }
+                    QEModel.setTotalDocumentLength(1);
+                    weight += QEModel.score((float) docProb, TF, DF);
+                }
+                weight /= feedbackNum;
+                termScores[i].setDocScore(weight);
+                double topicProb = sample.topicWordProb(maxTopic, i);
+                termScores[i].setTopicScore(topicProb);
+                
+                double [] topicPro = new double[index.length];
+                for (int k = 0; k < index.length; k++)
+                    topicPro[k] = sample.topicWordProb(index[k], i);
+                    
+                StandardDeviation sd =  new StandardDeviation();
+                double termDeviation = sd.evaluate(topicPro);
+                termScores[i].setDevScore(termDeviation);
+                
+                double similarity = 0d;
+                for(int m = 0; m < qterms.length; m++){
+                    similarity += this.cosine_similarity(topicPro, qtermTopicProb[m]);
+                }
+
+                similarity /= qterms.length;
+                termScores[i].setsimScore(similarity);
+                
+                
+                
+                
+                
+                if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
+                    weight = 0;
+                }
+                allTerms[i] = new ExpansionTerm(term, 0);
+                allTerms[i].setWeightExpansion(weight);
+                this.termMap.put(term, allTerms[i]);
+                totalweight += weight;
+            }
+            
+            
+
+            java.util.Arrays.sort(allTerms);
+            // determine double normalizing factor
+            float normaliser = allTerms[0].getWeightExpansion();
+            for (ExpansionTerm term : allTerms) {
+                if (normaliser != 0) {
+                    term.setWeightExpansion(term.getWeightExpansion()
+                            / totalweight);
+                }
+            }
+            
+            System.out.println("Query is " + java.util.Arrays.toString(qterms));
+            java.util.Arrays.sort(termScores, TermDocScoreComparator);
+            for (int count = 0; (count < 50 && count < len); count++)
+                System.out.println(String.format("Doc Score of %d th term %s is %f ",
+                        count, termScores[count].getTerm(), termScores[count].getDocScore()));
+            
+            System.out.println();
+            System.out.println();
+            java.util.Arrays.sort(termScores, TermTopicScoreComparator);            
+            for (int count = 0; (count < 50 && count < len); count++)
+                System.out.println(String.format("Topic Score of %d th term %s is %f ",
+                        count, termScores[count].getTerm(), termScores[count].getTopicScore()));
+            
+         
+            System.out.println();
+            System.out.println();
+            java.util.Arrays.sort(termScores, TermSimScoreComparator);
+            for (int count = 0; (count < 50 && count < len); count++)
+                System.out.println(String.format("Sim Score of %d th term %s is %f ",
+                        count, termScores[count].getTerm(), termScores[count].getsimScore()));
+                        
+            System.out.println();
+            System.out.println();            
+            java.util.Arrays.sort(termScores, TermDevScoreComparator);
+            for (int count = 0; (count < 50 && count < len); count++)
+                System.out.println(String.format("Dev Score of %d th term %s is %f ",
+                        count, termScores[count].getTerm(), termScores[count].getDevScore()));
+            
+		    
+		}else if (strategy >9){
+            // term weight based on feedback quality
+		    System.out.println("I am in strategy " + strategy + "\n");
+	        double []feedDocScores = getFeedDocScores(strategy, sample.numDocuments(), 
+	                dscores, docTopicProbs, withOrgScore, beta);
+	        
+	        for (int i = 0; i < feedDocScores.length; i++)
+	            System.out.println("the score of feedback doc " + i + " is " + feedDocScores[i] + "\n");
+	        
+            float totalweight = 0;
+            int feedbackNum = sample.numDocuments();
+            for (int i = 0; i < len; i++) {
+                String term = SYMBOL_TABLE.idToSymbol(i);
+                TermsCache.Item item = getItem(term);
+                float TF = item.ctf;
+                float DF = item.df;
+                float weight = 0;
+
+                weight = 0;
+                // use probability in top 1 topic as original weight in one
+                // feedback doc, add all the score up and divide by the doc num
+                // then rank
+                for (int d = 0; d < feedbackNum; d++) {
+                    double docProb = sample.docWordCount(d, i)
+                            / (float) sample.documentLength(d);
+                    if (docProb == 0) {
+                        continue;
+                    }
+                    double onedocWeight = docProb * feedDocScores[d]; //Multiple the term prob by the doc score
+
+                    QEModel.setTotalDocumentLength(1);
+                    weight += QEModel.score((float) onedocWeight, TF, DF);
+                }
+                weight /= feedbackNum;
+                if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
+                    weight = 0;
+                }
+                allTerms[i] = new ExpansionTerm(term, 0);
+                allTerms[i].setWeightExpansion(weight);
+                this.termMap.put(term, allTerms[i]);
+                totalweight += weight;
+            }
+
+            java.util.Arrays.sort(allTerms);
+            // determine double normalizing factor
+            float normaliser = allTerms[0].getWeightExpansion();
+            for (ExpansionTerm term : allTerms) {
+                if (normaliser != 0) {
+                    term.setWeightExpansion(term.getWeightExpansion()
+                            / totalweight);
+                }
+            }
+
+		    
+		    
 		}
 		return allTerms;
 	}
@@ -693,14 +848,102 @@ public class TopicBasedTermSelector extends TermSelector {
 				+ "expTag=" + expTag;
 	}
 	
+	private double[] getFeedDocScores(int strategy, int feedDocNum, float[] orgDocScores, double[][] docTopicProbs, 
+	        boolean withOrgScore, float docScoreAlpha){
+	    if (orgDocScores.length == 0) 
+	        return null;
+	    double[] feedbackDocScores = new double[feedDocNum];
+	    java.util.Arrays.fill(feedbackDocScores, 1);
+	    int topicNum = docTopicProbs[0].length;
+
+	    if ((feedDocNum <= 3) || (strategy > 13) || (strategy < 10))
+	        return feedbackDocScores;
+	    
+	    switch(strategy){
+	        case 10://doc similarity score
+	            for (int i = 3; i< feedDocNum; i++){
+	                for(int j = 0; j < 3; j++)
+	                    feedbackDocScores[i] += getCosineSimilarity(docTopicProbs[i], docTopicProbs[j]);
+	                
+	                feedbackDocScores[i] = (1 + (feedbackDocScores[i] - 1)/3)/2; //normalized to range 0-1
+	            }
+	            break;
+	        case 11: //Norm2
+	            for (int i = 3; i< feedDocNum; i++){
+                    for(int j = 0; j < 3; j++)
+                        feedbackDocScores[i] += MetricsUtils.distL2(docTopicProbs[i], docTopicProbs[j]);
+                    
+                    feedbackDocScores[i] = feedbackDocScores[i] /(3*topicNum); //normalized to range 0-1
+                }
+                break;
+	        case 12:// topic entropy. Smaller, better
+	            for (int i = 0; i< feedDocNum; i++){
+	                   for(int j = 0; j< topicNum; j++)
+                        feedbackDocScores[i] += -1 * docTopicProbs[i][j] * Math.log(docTopicProbs[i][j]);
+	            
+	            for (int k = 0; k< feedDocNum; k++)
+	                feedbackDocScores[k] = 1- (feedbackDocScores[k]/Math.log(topicNum));
+                }
+                break;
+	        case 13: //Jenson-Shannon divergence from avg distribution
+	            double[] avgTopicDist = new double[topicNum];
+	            for (int i = 0; i< feedDocNum; i++)
+	                for(int j = 0; j< topicNum; j++)
+	                    avgTopicDist[j] += docTopicProbs[i][j];
+	            
+	            for (int i = 0; i< feedDocNum; i++)
+	                avgTopicDist[i] /= feedDocNum;
+	            
+	            for (int i = 0; i< feedDocNum; i++)
+                    feedbackDocScores[i] = MetricsUtils.jsd(docTopicProbs[i], avgTopicDist);
+
+                break;
+                
+             default: break;
+	        
+	    }
+	    
+	    if (withOrgScore)
+	        for (int i = 0; i< feedDocNum; i++)
+	            feedbackDocScores[i] = feedbackDocScores[i] * (1 - docScoreAlpha) 
+	            + docScoreAlpha * orgDocScores[i];
+	    
+	    return feedbackDocScores;
+	}
+	
+	
 	private static double cosine_similarity(float[] vec1, float[] vec2) { 
         double dp = dot_product(vec1,vec2); 
         double magnitudeA = find_magnitude(vec1); 
         double magnitudeB = find_magnitude(vec2); 
         return (dp)/(magnitudeA*magnitudeB); 
     } 
+	
+	   private  double cosine_similarity(double[] vec1, double[] vec2) { 
+	        double dp = dot_product(vec1,vec2); 
+	        double magnitudeA = find_magnitude(vec1); 
+	        double magnitudeB = find_magnitude(vec2); 
+	        return (dp)/(magnitudeA*magnitudeB); 
+	    } 
+	   
+	   private  double getCosineSimilarity(double[] vec1, double[] vec2) { 
+	        double dp = dot_product(vec1,vec2); 
+	        double magnitudeA = find_magnitude(vec1); 
+	        double magnitudeB = find_magnitude(vec2); 
+	        return (dp)/(magnitudeA*magnitudeB); 
+	    } 
+	   
 
     private static double find_magnitude(float[] vec) { 
+        double sum_mag=0; 
+        for(int i=0;i<vec.length;i++) 
+        { 
+            sum_mag = sum_mag + vec[i]*vec[i]; 
+        } 
+        return Math.sqrt(sum_mag); 
+    } 
+    
+    private  double find_magnitude(double[] vec) { 
         double sum_mag=0; 
         for(int i=0;i<vec.length;i++) 
         { 
@@ -717,6 +960,187 @@ public class TopicBasedTermSelector extends TermSelector {
         } 
         return sum; 
     } 
+    
+    private  double dot_product(double[] vec1, double[] vec2) { 
+        double sum=0; 
+        for(int i=0;i<vec1.length;i++) 
+        { 
+            sum = sum + vec1[i]*vec2[i]; 
+        } 
+        return sum; 
+    } 
+    
+    public class TermScores implements Comparable<TermScores>{
+        private String term;
+        private double docScore;
+        private double topicScore;
+        private double simScore;
+        private double devScore;
+        
+        
+        public TermScores(String term){
+            super();
+            this.term = term;
+            this.docScore = 0d;
+            this.topicScore = 0d;
+            this.simScore = 0d;
+            this.devScore = 0d;
+        }
+        /**
+         * @return the term
+         */
+        public String getTerm() {
+            return term;
+        }
+
+
+        /**
+         * @param term the term to set
+         */
+        public void setTerm(String term) {
+            this.term = term;
+        }
+
+
+        /**
+         * @return the docScore
+         */
+        public double getDocScore() {
+            return docScore;
+        }
+
+
+        /**
+         * @param docScore the docScore to set
+         */
+        public void setDocScore(double docScore) {
+            this.docScore = docScore;
+        }
+
+
+        /**
+         * @return the topicScore
+         */
+        public double getTopicScore() {
+            return topicScore;
+        }
+
+
+        /**
+         * @param topicScore the topicScore to set
+         */
+        public void setTopicScore(double topicScore) {
+            this.topicScore = topicScore;
+        }
+
+
+        /**
+         * @return the simScore
+         */
+        public double getsimScore() {
+            return simScore;
+        }
+
+
+        /**
+         * @param simScore the simScore to set
+         */
+        public void setsimScore(double simScore) {
+            this.simScore = simScore;
+        }
+
+
+        /**
+         * @return the devScore
+         */
+        public double getDevScore() {
+            return devScore;
+        }
+
+
+        /**
+         * @param devScore the devScore to set
+         */
+        public void setDevScore(double devScore) {
+            this.devScore = devScore;
+        }
+
+
+        
+        //alphabetical order by default
+        public int compareTo(TermScores other) {
+            return this.term.compareTo(other.term);
+            
+        }
+        
+        
+
+
+        /* (non-Javadoc)
+         * @see java.lang.Object#toString()
+         */
+        @Override
+        public String toString() {
+            return String.format("TermScores of %s are Doc: %f  Topic: %f"
+                    + " Similarity: %f Dev: %f \n", this.term, this.docScore, this.topicScore,
+                    this.simScore, this.devScore);
+        }
+        
+        
+    }
+    
+    private  Comparator<TermScores> TermDocScoreComparator = new Comparator<TermScores>() {
+
+        public int compare(TermScores TermScores1, TermScores TermScores2) {
+
+            double TermDocScores1 = TermScores1.getDocScore();
+            double TermDocScores2 = TermScores2.getDocScore();
+
+            // descending order
+            return -1 * Double.compare(TermDocScores1, TermDocScores2);
+        }
+
+    };
+    
+    
+    private  Comparator<TermScores> TermTopicScoreComparator = new Comparator<TermScores>() {
+
+        public int compare(TermScores TermScores1, TermScores TermScores2) {
+
+            double TermProbScores1 = TermScores1.getTopicScore();
+            double TermProbScores2 = TermScores2.getTopicScore();
+
+            // descending order
+            return -1 * Double.compare(TermProbScores1, TermProbScores2);
+        }
+
+    };
+    
+    private  Comparator<TermScores> TermSimScoreComparator = new Comparator<TermScores>() {
+
+        public int compare(TermScores TermScores1, TermScores TermScores2) {
+
+            double TermSimScores1 = TermScores1.getsimScore();
+            double TermSimScores2 = TermScores2.getsimScore();
+
+            // descending order
+            return -1 * Double.compare(TermSimScores1, TermSimScores2);
+        }
+
+    };
+    
+    private  Comparator<TermScores> TermDevScoreComparator = new Comparator<TermScores>() {
+
+        public int compare(TermScores TermScores1, TermScores TermScores2) {
+
+            double TermDevScores1 = TermScores1.getDevScore();
+            double TermDevScores2 = TermScores2.getDevScore();
+
+            // descending order
+            return -1 * Double.compare(TermDevScores1, TermDevScores2);
+        }
+
+    };
 
 	/**
 	 * @param args
