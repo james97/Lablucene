@@ -8,8 +8,6 @@ import gnu.trove.TObjectIntHashMap;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -20,8 +18,6 @@ import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.apache.log4j.Logger;
 import org.apache.lucene.MetricsUtils;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.index.TermPositionVector;
 import org.apache.lucene.postProcess.QueryExpansionModel;
@@ -138,16 +134,7 @@ public class TopicBasedTermSelector extends TermSelector {
 			indriNorm(dscores);
 		}
 		Normalizer.norm2(dscores);
-		// logger.info("sum of doc weights:" + Arrays.sum(dscores));
-		// Normalizer.norm_MaxMin_0_1(dscores);
-		// if(logger.isInfoEnabled())
-		// {
-		// StringBuffer buf = new StringBuffer();
-		// for(int i=0; i < dscores.length; i++){
-		// buf.append("" + dscores[i] + ", ");
-		// }
-		// logger.info("4.doc weights:" + buf.toString());
-		// }
+
 		String[][] termCache = null;
 		int[][] termFreq = null;
 		termMap = new HashMap<String, ExpansionTerm>();
@@ -325,7 +312,6 @@ public class TopicBasedTermSelector extends TermSelector {
 		return retV;
 	}
 
-	@SuppressWarnings("unused")
     private ExpansionTerm[] selectTerm(SymbolTable SYMBOL_TABLE,
 			GibbsSample sample, QueryExpansionModel QEModel, float theta[],
 			int querytermid[], LatentDirichletAllocation lda,
@@ -382,19 +368,22 @@ public class TopicBasedTermSelector extends TermSelector {
                  qtermTopicProb[m][k] = (float) sample.topicWordProb(index[k], id);
          }
      
-
+        TermsCache.Item[] items = new TermsCache.Item[len];
+        for (int i = 0; i < len; i++) {
+            String term = SYMBOL_TABLE.idToSymbol(i);
+            items[i] = getItem(term);
+         }
 		if (strategy == 1) { // take advantage of the topic with the highest
 								// prob
 			float totalweight = 0;
 			int feedbackNum = sample.numDocuments();
 			for (int i = 0; i < len; i++) {
 				String term = SYMBOL_TABLE.idToSymbol(i);
-				TermsCache.Item item = getItem(term);
+				TermsCache.Item item = items[i];
 				float TF = item.ctf;
 				float DF = item.df;
 				float weight = 0;
 
-				weight = 0;
 				// use probability in top 1 topic as original weight in one
 				// feedback doc, add all the score up and divide by the doc num
 				// then rank
@@ -487,96 +476,6 @@ public class TopicBasedTermSelector extends TermSelector {
 					term.setWeightExpansion(term.getWeightExpansion()
 							/ totalweight);
 				}
-			}
-
-		} else if (strategy == 3) { // add by Jun Miao
-			// take advantage of the topic with the highest
-			// prob and rank terms by PMI in the collection
-
-			try {
-				float totalweight = 0;
-				sample.numDocuments();
-				for (int i = 0; i < len; i++) {
-					String term = SYMBOL_TABLE.idToSymbol(i);
-					TermsCache.Item item = getItem(term);
-					float weight = 0;
-					IndexReader ir = this.searcher.getIndexReader();
-					int docInColl = ir.numDocs();
-
-					// get query collection probability P(q)
-					double[] qCollProb = new double[qterms.length];
-
-					// get the postingList and of query terms
-					ArrayList<HashSet> qTermPostings = new ArrayList<HashSet>();
-					for (qCount = 0; qCount < qterms.length; qCount++) {
-						Term qterm = new Term(this.field, qterms[qCount]);
-						TermDocs docIds;
-						docIds = ir.termDocs(qterm);
-
-						HashSet<Integer> qPostings = new HashSet<Integer>();
-
-						while (docIds.next())
-							qPostings.add(docIds.doc());
-
-						qTermPostings.add(qPostings);
-						qCollProb[qCount] = qPostings.size()
-								/ (double) docInColl;
-					}
-
-					// Get the posting list of the current term
-					weight = 0;
-
-					Term currTerm = new Term(this.field, term);
-					TermDocs currTermDocIds = ir.termDocs(currTerm);
-					int currTermPostingNum = 0;
-					int[] commonPostingNum = new int[qterms.length];
-
-					while (currTermDocIds.next()) {
-						for (int l = 0; l < qterms.length; l++) {
-							int id = currTermDocIds.doc();
-							if (qTermPostings.get(l).contains(id))
-								commonPostingNum[l]++;
-						}
-						currTermPostingNum++;
-					}
-					// Get all the P(term), P(term, qterm)
-					// Calculate the PMI^2 weight of this term
-					double currTermCollProb = (double) currTermPostingNum
-							/ docInColl;
-					double[] jointProbs = new double[qterms.length];
-					for (int l = 0; l < qterms.length; l++) {
-						jointProbs[l] = (double) commonPostingNum[l]
-								/ docInColl;
-						weight += (Math.log(jointProbs[l]
-								/ (qCollProb[l] * currTermCollProb)))
-								/ (-jointProbs[l]);
-					}
-
-					double topicWeight = sample.topicWordProb(maxTopic, i);
-					weight /= qterms.length * topicWeight;
-
-					if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
-						weight = 0;
-					}
-					allTerms[i] = new ExpansionTerm(term, 0);
-					allTerms[i].setWeightExpansion(weight);
-					this.termMap.put(term, allTerms[i]);
-					totalweight += weight;
-				}
-
-				java.util.Arrays.sort(allTerms);
-				// determine double normalizing factor
-				float normaliser = allTerms[0].getWeightExpansion();
-				for (ExpansionTerm term : allTerms) {
-					if (normaliser != 0) {
-						term.setWeightExpansion(term.getWeightExpansion()
-								/ totalweight);
-					}
-				}
-
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
 
 		} else if (strategy == 4) { // add by Jun Miao
