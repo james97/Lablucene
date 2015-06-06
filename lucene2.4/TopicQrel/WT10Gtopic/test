@@ -1,0 +1,17 @@
+#!/bin/sh
+
+
+cat titleOnly451-550|while read line; do 
+  for j in `echo $line|wc -w`;do 
+    if [ $j -lt 4 ] 
+    then 
+    echo $line >> 451-550lessThan3
+    elif [ $j -lt 7 ]
+    then
+    echo $line >> 451-550lessThan6
+    elif [ $j -ge 7 ]
+    then
+    echo $line >> 451-550ge6
+    fi 
+  done
+done
