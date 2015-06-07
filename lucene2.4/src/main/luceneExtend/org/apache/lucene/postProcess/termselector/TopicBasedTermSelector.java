@@ -5,22 +5,17 @@ package org.apache.lucene.postProcess.termselector;
 
 import gnu.trove.TObjectIntHashMap;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.apache.log4j.Logger;
 import org.apache.lucene.MetricsUtils;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.index.TermPositionVector;
 import org.apache.lucene.postProcess.QueryExpansionModel;
@@ -87,6 +82,7 @@ public class TopicBasedTermSelector extends TermSelector {
 
 	protected int EXPANSION_MIN_DOCUMENTS;
 	float dscores[];
+	Map<String, ExpansionTerm> tmpTermMap = null;
 
 	TObjectIntHashMap<String> dfMap = null;
 
@@ -168,6 +164,7 @@ public class TopicBasedTermSelector extends TermSelector {
 			selector.setMetaInfo("normalize.weights", "false");
 			selector.setOriginalQueryTerms(originalQueryTermidSet);
 			selector.assignTermWeights(expDocs, expscores, QEModel);
+			this.tmpTermMap = selector.termMap;
 
 			HashMap<String, ExpansionTerm> map = selector
 					.getMostWeightedTermsInHashMap(expNum);
@@ -354,6 +351,7 @@ public class TopicBasedTermSelector extends TermSelector {
 				for (int j = 0; j < sample.numTopics(); j++) {
 					buf.append(Rounding.round(sample.documentTopicProb(i, j), 5)
 							+ "\t");
+					docTopicProbs[i][j] =  Rounding.round(sample.documentTopicProb(i, j), 5);
 				}
 				buf.append("\n");
 			}
@@ -383,7 +381,7 @@ public class TopicBasedTermSelector extends TermSelector {
                  qtermTopicProb[m][k] = (float) sample.topicWordProb(index[k], id);
          }
      
-
+        int maxQueryTermId = querytermid[querytermid.length - 1];
 		if (strategy == 1) { // take advantage of the topic with the highest
 								// prob
 			float totalweight = 0;
@@ -406,14 +404,20 @@ public class TopicBasedTermSelector extends TermSelector {
 						continue;
 					}
 					double topicProb = sample.topicWordProb(maxTopic, i);
-					double onedocWeight = (1 - beta) * docProb + beta
-							* topicProb;
+					double onedocWeight = docProb;
 					// one doc weight is the original doc weight smoothed by the
 					// topic prob
 					QEModel.setTotalDocumentLength(1);
 					weight += QEModel.score((float) onedocWeight, TF, DF);
 				}
 				weight /= feedbackNum;
+				//nerv the performance of basic topic method
+				double topicProb = sample.topicWordProb(maxTopic, i);
+					weight = (float) ((1 - beta) * weight + beta
+	                        * topicProb);
+	                System.out.println("topic weight is " + topicProb + 
+	                        "doc weight " + weight);
+				
 				if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
 					weight = 0;
 				}
@@ -462,14 +466,25 @@ public class TopicBasedTermSelector extends TermSelector {
 					if (docProb == 0) {
 						continue;
 					}
-					double onedocWeight = (1 - beta) * docProb + beta
-							* topicWeight;
+					double onedocWeight = docProb;
+					
 					// one doc weight is the original doc weight smoothed by the
 					// topic prob
 					QEModel.setTotalDocumentLength(1);
 					weight += QEModel.score((float) onedocWeight, TF, DF);
 				}
 				weight /= feedbackNum;
+				
+				if (this.tmpTermMap.get(term) != null) 
+				    logger.debug(String.format("term %s has a rocchio weight %f", 
+				            term, this.tmpTermMap.get(term).getWeightExpansion()));
+				
+				if(expTag){
+				    if(this.tmpTermMap.get(term) != null)
+				        weight = (float) ((1 - beta) * this.tmpTermMap.get(term).getWeightExpansion() + beta *topicWeight);
+				    else
+				        weight = (float) ((1 - beta) * weight + beta * topicWeight);;
+				}
 				
 				if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
 					weight = 0;
@@ -490,110 +505,68 @@ public class TopicBasedTermSelector extends TermSelector {
 				}
 			}
 
-		} else if (strategy == 3) { // add by Jun Miao
-			// take advantage of the topic with the highest
-			// prob and rank terms by PMI in the collection
-
-			try {
-				float totalweight = 0;
-				sample.numDocuments();
-				for (int i = 0; i < len; i++) {
-					String term = SYMBOL_TABLE.idToSymbol(i);
-					TermsCache.Item item = getItem(term);
-					float weight = 0;
-					IndexReader ir = this.searcher.getIndexReader();
-					int docInColl = ir.numDocs();
-
-					// get query collection probability P(q)
-					double[] qCollProb = new double[qterms.length];
-
-					// get the postingList and of query terms
-					ArrayList<HashSet> qTermPostings = new ArrayList<HashSet>();
-					for (qCount = 0; qCount < qterms.length; qCount++) {
-						Term qterm = new Term(this.field, qterms[qCount]);
-						TermDocs docIds;
-						docIds = ir.termDocs(qterm);
-
-						HashSet<Integer> qPostings = new HashSet<Integer>();
-
-						while (docIds.next())
-							qPostings.add(docIds.doc());
-
-						qTermPostings.add(qPostings);
-						qCollProb[qCount] = qPostings.size()
-								/ (double) docInColl;
-					}
-
-					// Get the posting list of the current term
-					weight = 0;
-
-					Term currTerm = new Term(this.field, term);
-					TermDocs currTermDocIds = ir.termDocs(currTerm);
-					int currTermPostingNum = 0;
-					int[] commonPostingNum = new int[qterms.length];
-
-					while (currTermDocIds.next()) {
-						for (int l = 0; l < qterms.length; l++) {
-							int id = currTermDocIds.doc();
-							if (qTermPostings.get(l).contains(id))
-								commonPostingNum[l]++;
-						}
-						currTermPostingNum++;
-					}
-					// Get all the P(term), P(term, qterm)
-					// Calculate the PMI^2 weight of this term
-					double currTermCollProb = (double) currTermPostingNum
-							/ docInColl;
-					double[] jointProbs = new double[qterms.length];
-					for (int l = 0; l < qterms.length; l++) {
-						jointProbs[l] = (double) commonPostingNum[l]
-								/ docInColl;
-						weight += (Math.log(jointProbs[l]
-								/ (qCollProb[l] * currTermCollProb)))
-								/ (-jointProbs[l]);
-					}
-
-					double topicWeight = sample.topicWordProb(maxTopic, i);
-					weight /= qterms.length * topicWeight;
-
-					if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
-						weight = 0;
-					}
-					allTerms[i] = new ExpansionTerm(term, 0);
-					allTerms[i].setWeightExpansion(weight);
-					this.termMap.put(term, allTerms[i]);
-					totalweight += weight;
-				}
-
-				java.util.Arrays.sort(allTerms);
-				// determine double normalizing factor
-				float normaliser = allTerms[0].getWeightExpansion();
-				for (ExpansionTerm term : allTerms) {
-					if (normaliser != 0) {
-						term.setWeightExpansion(term.getWeightExpansion()
-								/ totalweight);
-					}
-				}
-
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
 		} else if (strategy == 5) { // add by Jun Miao
 			// compare the probability distribution of query terms and 
 			//candidate feedback terms.
 
 			float totalweight = 0;
-            sample.numDocuments();
+			int feedbackNum = sample.numDocuments();
+			
             for (int i = 0; i < len; i++) {
-            	String term = SYMBOL_TABLE.idToSymbol(i);
-            	TermsCache.Item item = getItem(term);
-            	float weight = 0;
-            	IndexReader ir = this.searcher.getIndexReader();
-            	ir.numDocs();
-            	
+            	 String term = SYMBOL_TABLE.idToSymbol(i);
+                 TermsCache.Item item = getItem(term);
+                 float TF = item.ctf;
+                 float DF = item.df;
+                 float weight = 0;
+                 double topicWeight = 0;
+                 
+                 
+                 
+                 //get the topic distribution of current term
+                 double []topicProb = new double[index.length];
+                 for (int k = 0; k < index.length; k++)
+                         topicProb[k] = (float) sample.topicWordProb(index[k], i);
+                 
+                 for(int m = 0; m < qterms.length; m++){
+                     topicWeight += MetricsUtils.cosine_similarity(topicProb, qtermTopicProb[m]);
+                 }
 
+                 topicWeight /= qterms.length;
+                 
+                 
+                 for (int d = 0; d < feedbackNum; d++) {
+                     double docProb = sample.docWordCount(d, i)
+                                     / (float) sample.documentLength(d);
+                     if (docProb == 0) {
+                             continue;
+                     }                                   
+                     double docWeight = QEModel.score((float) docProb, TF, DF);
+                     
+                     //topicWeight and doc weight are not on the same level
+//                     double onedocWeight = (1 - beta) * docWeight + beta
+//                                     * topicWeight;
+                     
+                    // double onedocWeight = (1 + beta * topicWeight) * docWeight;
+                     double onedocWeight = beta * (1 +  topicWeight)* sample.topicWordProb(maxTopic, i)
+                             + (1 - beta) * docWeight;
+                     // one doc weight is the original doc weight smoothed by the
+                     // topic prob
+                     QEModel.setTotalDocumentLength(1);
+                     //weight += QEModel.score((float) onedocWeight, TF, DF);
+                     weight += onedocWeight;
+             }
+
+				if (this.tmpTermMap.get(term) != null) 
+				    logger.debug(String.format("term %s has a rocchio weight %f", 
+				            term, this.tmpTermMap.get(term).getWeightExpansion()));
+				
+				if(expTag){
+				    if(this.tmpTermMap.get(term) != null)
+				        weight = (float) ((1 - beta) * this.tmpTermMap.get(term).getWeightExpansion() + beta *topicWeight);
+				    else
+				        weight = (float) ((1 - beta) * weight + beta * topicWeight);;
+				}
+            	
             	if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
             		weight = 0;
             	}
