@@ -566,9 +566,9 @@ public class ExpansionTerms {
 			QEModel.setMaxTermFrequency(allTerms[posMaxWeight]
 					.getWithinDocumentFrequency());
 			normaliser = (float) QEModel.parameterFreeNormaliser();
-			if (logger.isInfoEnabled()) {
-				if(logger.isInfoEnabled()) logger.info("parameter free query expansion.");
-			}
+			if (logger.isDebugEnabled())
+				logger.debug("parameter free query expansion.");
+			
 		}
 		// lexicon.findTerm(allTerms[posMaxWeight].termID);
 		// if(logger.isDebugEnabled()){

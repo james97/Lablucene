@@ -144,10 +144,11 @@
   		<groupId>javatar</groupId>
   		<artifactId>javatar</artifactId>
   	</dependency>
-  	<dependency>
-  		<groupId>spy</groupId>
-  		<artifactId>spymemcached</artifactId>
-  	</dependency>
+	  <dependency>
+		<groupId>spy</groupId>
+		<artifactId>spymemcached</artifactId>
+		<scope>provided</scope>
+	</dependency>
   </dependencies>
   <dependencyManagement>
   	<dependencies>
@@ -268,4 +269,16 @@
   		</dependency>
   	</dependencies>
   </dependencyManagement>
+  
+  <repositories>
+     <repository>
+      <id>spy</id>
+      <name>Spy Repository</name>
+      <layout>default</layout>
+      <url>http://files.couchbase.com/maven2/</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
 </project>

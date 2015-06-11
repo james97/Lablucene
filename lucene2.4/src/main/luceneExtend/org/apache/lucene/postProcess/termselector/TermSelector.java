@@ -53,6 +53,15 @@ public abstract class TermSelector {
 	protected THashMap<String, String> metaMap = new THashMap<String, String>();
 
 	protected TopDocCollector topDoc;
+	protected String topicId;
+
+	public String getTopicId() {
+		return topicId;
+	}
+
+	public void setTopicId(String topicId) {
+		this.topicId = topicId;
+	}
 
 	public TermSelector() {
 		this.EXPANSION_MIN_DOCUMENTS = Integer.parseInt(ApplicationSetup

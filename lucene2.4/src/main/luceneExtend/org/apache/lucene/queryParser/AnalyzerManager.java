@@ -35,7 +35,7 @@ public class AnalyzerManager {
 				for (int i = 0; i < filters.length; i++) {
 					if (filters[i].length() > 1) {
 						analyzer.addFilter(filters[i]);
-						if(logger.isInfoEnabled()) logger.info("adding filter: " + filters[i]);
+						if(logger.isDebugEnabled()) logger.debug("adding filter: " + filters[i]);
 					}
 				}
 			}

@@ -61,6 +61,7 @@ public class QueryExpansionAdap extends QueryExpansion {
 		selector.setResultSet(topDoc);
 		selector.setOriginalQueryTerms(termSet);
 		selector.setField(field);
+		selector.setTopicId(topicId);
 		
 		ExpansionTerm[] expandedTerms = expandFromDocuments(fdocs.docid, fdocs.score, numberOfTermsToReweight, QEModel, selector);
 
@@ -175,8 +176,8 @@ public class QueryExpansionAdap extends QueryExpansion {
 			int numberOfTermsToReweight, QueryExpansionModel QEModel,
 			TermSelector selector) {
 
-		if(logger.isDebugEnabled())  logger.debug("Number of feedback documents: "
-				+ docIDs.length);
+		if(logger.isDebugEnabled())  
+			logger.debug("Number of feedback documents: " + docIDs.length);
 		if (this.termSet != null)
 			selector.setOriginalQueryTerms(termSet);
 		selector.assignTermWeights(docIDs, scores, QEModel);

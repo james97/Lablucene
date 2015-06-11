@@ -104,16 +104,7 @@ public class TopicTermSelector extends TermSelector {
 		indriNorm(dscores);
 		}
 		Normalizer.norm2(dscores);
-//		logger.info("sum of doc weights:" + Arrays.sum(dscores));
-//		Normalizer.norm_MaxMin_0_1(dscores);
-//		if(logger.isInfoEnabled()) 
-//		{
-//			StringBuffer buf = new StringBuffer();
-//			for(int i=0; i < dscores.length; i++){
-//				buf.append("" + dscores[i] + ", ");
-//			}
-//			logger.info("4.doc weights:" + buf.toString());
-//		}
+
 		String[][] termCache = null;
 		int[][] termFreq = null;
 		termMap = new HashMap<String, ExpansionTerm>();
@@ -250,8 +241,8 @@ public class TopicTermSelector extends TermSelector {
 		// //////////////LDA clusteringend////////////////
 		ExpansionTerm[] allTerms = selectTerm(SYMBOL_TABLE, sample, QEModel,
 				theta, querytermid, lda, tAss);
-//		logger.info( " feedback term: " + this.termMap.size());
 	}
+
 
 	float[] sampleTheta(int numTopics, LatentDirichletAllocation lda,
 			int[] words) {

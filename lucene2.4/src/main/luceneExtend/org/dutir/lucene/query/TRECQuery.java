@@ -189,7 +189,7 @@ public class TRECQuery extends LuceneQueryParser {
 				}
 				// after processing each query file, close the BufferedReader
 				br.close();
-				if(logger.isInfoEnabled()) logger.info("Extracting Queries successfully");
+				if(logger.isDebugEnabled()) logger.debug("Extracting Queries successfully");
 			}
 		} catch (IOException ioe) {
 			logger.error(
@@ -242,7 +242,7 @@ public class TRECQuery extends LuceneQueryParser {
 			while ((queryFilename = addressQueryFile.readLine()) != null) {
 				if (queryFilename.startsWith("#") || queryFilename.equals(""))
 					continue;
-				if(logger.isInfoEnabled()) logger.info("Extracting queries from " + queryFilename);
+				if(logger.isDebugEnabled()) logger.debug("Extracting queries from " + queryFilename);
 				fileCount++;
 				boolean rtr = extractQuery(queryFilename, vecStringQueries,
 						vecStringQueryIDs);

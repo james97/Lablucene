@@ -13,6 +13,11 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import net.spy.memcached.AddrUtil;
+import net.spy.memcached.ConnectionFactoryBuilder;
+import net.spy.memcached.FailureMode;
+import net.spy.memcached.MemcachedClient;
+
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.apache.log4j.Logger;
 import org.apache.lucene.MetricsUtils;
@@ -36,8 +41,11 @@ import org.dutir.util.symbol.SymbolTable;
  * 
  */
 
-public class TopicBasedTermSelector extends TermSelector {
+public class TopicBasedTermSelector extends TermSelector{
 	private static Logger logger = Logger.getLogger(TopicBasedTermSelector.class);
+	private static MemcachedClient mcc = null;
+	String address = "127.0.0.1:11211";
+
 	static boolean LanguageModel = Boolean.parseBoolean(ApplicationSetup
 			.getProperty("Lucene.Search.LanguageModel", "false"));
 	static int strategy = Integer.parseInt(ApplicationSetup.getProperty(
@@ -62,10 +70,17 @@ public class TopicBasedTermSelector extends TermSelector {
 			"Association.winSize", "50"));
 	static boolean withOrgScore = Boolean.parseBoolean(ApplicationSetup.getProperty(
             "TopicBasedTermSelector.withOrgScore", "false"));
-
+	static boolean useMemCacheDB = Boolean.parseBoolean(ApplicationSetup.getProperty(
+            "TopicBasedTermSelector.useMemCacheDB", "false"));
+	static boolean useAdapTopicNumber = Boolean.parseBoolean(ApplicationSetup.getProperty(
+            "TopicBasedTermSelector.useAdapTopicNumber", "true"));
+	
 	static Random RANDOM = new Random(43);
 	static short NUM_TOPICS = Short.parseShort(ApplicationSetup.getProperty(
 			"TopicBasedTermSelector.NUM_TOPICS", "5"));
+	
+	private String bm25_b = ApplicationSetup.getProperty(
+			"bm25.b", "0.35");
 	
 
 	// static double DOC_TOPIC_PRIOR = 0.01;
@@ -88,6 +103,9 @@ public class TopicBasedTermSelector extends TermSelector {
 
 	public TopicBasedTermSelector() throws IOException {
 		super();
+		TopicBasedTermSelector.setMcc(new MemcachedClient(
+				new ConnectionFactoryBuilder().setDaemon(true).setFailureMode(FailureMode.Retry).build(),
+				AddrUtil.getAddresses(address)));
 		this.setMetaInfo("normalize.weights", "true");
 		this.EXPANSION_MIN_DOCUMENTS = Integer.parseInt(ApplicationSetup
 				.getProperty("expansion.mindocuments", "2"));
@@ -110,16 +128,7 @@ public class TopicBasedTermSelector extends TermSelector {
 			indriNorm(dscores);
 		}
 		Normalizer.norm2(dscores);
-		// logger.info("sum of doc weights:" + Arrays.sum(dscores));
-		// Normalizer.norm_MaxMin_0_1(dscores);
-		// if(logger.isInfoEnabled())
-		// {
-		// StringBuffer buf = new StringBuffer();
-		// for(int i=0; i < dscores.length; i++){tion about the final sample, in this case the one drawn at epoch 15 (the 16th epoch counting from 0). It reports the number of documents, tokens, words and topics.
-		// buf.append("" + dscores[i] + ", ");
-		// }
-		// logger.info("4.doc weights:" + buf.toString());
-		// }
+
 		String[][] termCache = null;
 		int[][] termFreq = null;
 		termMap = new HashMap<String, ExpansionTerm>();
@@ -223,32 +232,74 @@ public class TopicBasedTermSelector extends TermSelector {
 		}
 
 		// ////////////////////////////////////////////
+		LatentDirichletAllocation.GibbsSample sample = null;
+		if(!useAdapTopicNumber)
+			 sample = LatentDirichletAllocation.gibbsSampler(
+					 DOC_WORDS, NUM_TOPICS, DOC_TOPIC_PRIOR,
+					 TOPIC_WORD_PRIOR, BURNIN_EPOCHS, SAMPLE_LAG,
+					 NUM_SAMPLES, RANDOM, querytermid, backids, null);
+		else {
+			// set a large number
+			//if((!useMemCacheDB) || (this.mcc == null))
+			String key = "Topic" + topicId + "b"+ bm25_b + "expDoc" + expDoc;
+			if((useMemCacheDB) && (TopicBasedTermSelector.getMcc() != null)){
+				if (TopicBasedTermSelector.getMcc().get(key) != null){
+					Short optTopicNum = (Short)TopicBasedTermSelector.getMcc().get(key);
+					logger.info(String.format("Find optimal topic number %d for %s", optTopicNum.shortValue(), key));
+					sample = LatentDirichletAllocation.gibbsSampler(
+							 DOC_WORDS, optTopicNum.shortValue(), DOC_TOPIC_PRIOR,
+							 TOPIC_WORD_PRIOR, BURNIN_EPOCHS, SAMPLE_LAG,
+							 NUM_SAMPLES, RANDOM, querytermid, backids, null);
+					NUM_TOPICS = optTopicNum.shortValue();
+				}else{
+					double pre_perplexity = 99999999;
+					double perplexity = 9999999;
+					double THRESHOLD = 0.005d;
+					short topicNumber = 5;
+					System.out.println("Start to obtain optimal topic number");
+					while (Math.abs((pre_perplexity - perplexity) / pre_perplexity) > THRESHOLD) {
+						pre_perplexity = perplexity;
+						topicNumber += 5;
+						DOC_TOPIC_PRIOR = 2d / topicNumber;
+						sample = LatentDirichletAllocation.gibbsSampler(DOC_WORDS,
+								topicNumber, DOC_TOPIC_PRIOR, TOPIC_WORD_PRIOR,
+								BURNIN_EPOCHS, SAMPLE_LAG, NUM_SAMPLES, RANDOM,
+								querytermid, backids, null);
+						perplexity = this.getPerplexity(sample);
 
-		// LatentDirichletAllocation.GibbsSample sample =
-		// LatentDirichletAllocation
-		// .gibbsSampler(DOC_WORDS, NUM_TOPICS, DOC_TOPIC_PRIOR,
-		// TOPIC_WORD_PRIOR, BURNIN_EPOCHS, SAMPLE_LAG,
-		// NUM_SAMPLES, RANDOM, querytermid, backids, null, tAss);
-		 LatentDirichletAllocation.GibbsSample sample = null;
-			//set a large number 
-		double pre_perplexity = 99999999;
-		double perplexity = 9999999;
-		double THRESHOLD = 0.005d;
-		short topicNumber = 5;
-		System.out.println("Start to obtain optimal topic number");
-		while (Math.abs((pre_perplexity - perplexity) / pre_perplexity) > THRESHOLD) {
-			pre_perplexity = perplexity;
-			topicNumber += 5;
-			DOC_TOPIC_PRIOR = 2d/topicNumber;
-			sample = LatentDirichletAllocation.gibbsSampler(DOC_WORDS,
-					topicNumber, DOC_TOPIC_PRIOR, TOPIC_WORD_PRIOR,
-					BURNIN_EPOCHS, SAMPLE_LAG, NUM_SAMPLES, RANDOM,
-					querytermid, backids, null);
-			perplexity = this.getPerplexity(sample);
-						
+					}
+					logger.info("Optimal topic number for " + expDoc + " docs is : "
+							+ topicNumber);
+					TopicBasedTermSelector.getMcc().add(key, 86400, topicNumber);
+					//remember to update NUM_TOPICS for theta
+					NUM_TOPICS = topicNumber;
+				}
+			}else{
+				double pre_perplexity = 99999999;
+				double perplexity = 9999999;
+				double THRESHOLD = 0.005d;
+				short topicNumber = 5;
+				System.out.println("Start to obtain optimal topic number");
+				while (Math.abs((pre_perplexity - perplexity) / pre_perplexity) > THRESHOLD) {
+					pre_perplexity = perplexity;
+					topicNumber += 5;
+					DOC_TOPIC_PRIOR = 2d / topicNumber;
+					sample = LatentDirichletAllocation.gibbsSampler(DOC_WORDS,
+							topicNumber, DOC_TOPIC_PRIOR, TOPIC_WORD_PRIOR,
+							BURNIN_EPOCHS, SAMPLE_LAG, NUM_SAMPLES, RANDOM,
+							querytermid, backids, null);
+					perplexity = this.getPerplexity(sample);
+
+				}
+				logger.info("Optimal topic number for " + expDoc + " docs is : "
+						+ topicNumber);
+				TopicBasedTermSelector.getMcc().add(key, 86400, topicNumber);
+				//remember to update NUM_TOPICS for theta
+				NUM_TOPICS = topicNumber;
+			}
+			
 		}
-		logger.warn("Optimal topic number for " + expDoc + " docs is : " + topicNumber);
-		
+				
 //		for(int epoch = 1; epoch <=BURNIN_EPOCHS; epoch = epoch + 1){
 //			sample = LatentDirichletAllocation.gibbsSampler(DOC_WORDS,
 //			topicNumber, DOC_TOPIC_PRIOR, TOPIC_WORD_PRIOR,
@@ -257,8 +308,7 @@ public class TopicBasedTermSelector extends TermSelector {
 //			perplexity = this.getPerplexity(sample);
 //			logger.warn("Perplexity when epoch is "+ epoch +" for " + expDoc + " docs is : " + perplexity);
 //		}
-	
-		NUM_TOPICS = topicNumber;
+
 		LatentDirichletAllocation lda = sample.lda();
 		short[][] qsamples = lda.sampleTopics(querytermid, numSamples, burnin,
 				sampleLag, RANDOM);
@@ -277,10 +327,12 @@ public class TopicBasedTermSelector extends TermSelector {
 
 		selectTerm(SYMBOL_TABLE, sample, QEModel,
 				theta, querytermid, lda, tAss);
+		
+		TopicBasedTermSelector.getMcc().shutdown();
 	}
 
 	  float[] sampleTheta(int numTopics, LatentDirichletAllocation lda,
-			int[] words) {
+			int[] words) {	
 		short[][] qsamples = lda.sampleTopics(words, numSamples, burnin,
 				sampleLag, RANDOM);
 		
@@ -777,8 +829,12 @@ public class TopicBasedTermSelector extends TermSelector {
 	 */
 	@Override
 	public String getInfo() {
-		return "TopicSel_s=" + strategy + "t=" + NUM_TOPICS + "beta=" + beta
+		if(useAdapTopicNumber)
+			return "TopicSel_s=" + strategy + "t=" + "Adap" + "beta=" + beta
 				+ "expTag=" + expTag;
+		else
+			return "TopicSel_s=" + strategy + "t=" + NUM_TOPICS + "beta=" + beta
+					+ "expTag=" + expTag;
 	}
 	
 	private double[] getFeedDocScores(int strategy, int feedDocNum, float[] orgDocScores, double[][] docTopicProbs, 
@@ -879,7 +935,7 @@ public class TopicBasedTermSelector extends TermSelector {
         	 sum += logDocProb[doc]; 
         	 
          double perplexity = Math.exp(-1 * sum/wordNum);
-         logger.info(String.format("Topic number is %d and perplexity is %f", topicNum, perplexity));
+         logger.debug(String.format("Topic number is %d and perplexity is %f", topicNum, perplexity));
          return perplexity;
     }
     
@@ -899,6 +955,14 @@ public class TopicBasedTermSelector extends TermSelector {
 			TermPositionVector[] tfvs, QueryExpansionModel QEModel) {
 		// TODO Auto-generated method stub
 
+	}
+
+	private static MemcachedClient getMcc() {
+		return mcc;
+	}
+
+	public static void setMcc(MemcachedClient mcc) {
+		TopicBasedTermSelector.mcc = mcc;
 	}
 
 }

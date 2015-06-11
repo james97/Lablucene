@@ -119,7 +119,7 @@ public class TermsCache {
 				fc = (FastCache<Term, Item>) AbstractExternalizable
 						.readObject(new File(path));
 				if (fc != null) {
-					if(logger.isInfoEnabled()) logger.info("load existing TermsCache with " + fc.size()
+					if(logger.isDebugEnabled()) logger.debug("load existing TermsCache with " + fc.size()
 							+ " entries from :" + path);
 					return;
 				}

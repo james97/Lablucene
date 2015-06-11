@@ -72,7 +72,7 @@ public class DiskCorpus<P extends DocumentParser> extends Corpus<P> {
 	public void visitCorpus() {
 		try {
 			if (CorpusTag) {
-				if(logger.isInfoEnabled()) logger.info("indexing Directory");
+				if(logger.isDebugEnabled()) logger.debug("indexing Directory");
 				visit(mParser, mTrainDir);
 			} else {
 				if(logger.isInfoEnabled()) logger.info("indexing Corpus from a file, per line： "

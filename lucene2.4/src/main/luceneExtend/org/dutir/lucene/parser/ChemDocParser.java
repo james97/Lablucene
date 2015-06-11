@@ -251,8 +251,8 @@ public class ChemDocParser implements DocumentParser {
 					logger.info("not matched: " + this.ucid);
 					try {
 						System.out.print(new String(this.bbuf, "utf8"));
-						logger.info("ecoding problem in article file");
-						logger.info(new String(this.bbuf, "utf8"));
+						logger.warn("ecoding problem in article file");
+						logger.warn(new String(this.bbuf, "utf8"));
 					} catch (UnsupportedEncodingException e) {
 						e.printStackTrace();
 					}

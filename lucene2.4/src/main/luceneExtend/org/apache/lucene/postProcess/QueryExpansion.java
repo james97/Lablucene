@@ -405,8 +405,8 @@ public class QueryExpansion implements PostProcess {
 			float score = topDocs.scoreDocs[i].score;
 
 			if (filename != null && !filename.equals(filename.trim())) {
-				if (logger.isDebugEnabled())
-					logger.debug("orginal doc name not trimmed: |" + filename
+				if (logger.isInfoEnabled())
+					logger.info("orginal doc name not trimmed: |" + filename
 							+ "|");
 			}
 			sbuffer.append(queryIdExpanded);

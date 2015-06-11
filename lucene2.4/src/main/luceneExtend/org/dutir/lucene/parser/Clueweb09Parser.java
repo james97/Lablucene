@@ -34,7 +34,7 @@ public class Clueweb09Parser implements DocumentParser {
 	IndexWriter writer = null;
 
 	public void indexAll() {
-		logger.info("adding doc: " + this.file.getAbsolutePath());
+		logger.debug("adding doc: " + this.file.getAbsolutePath());
 		this.preid = null;
 		try {
 			Document doc = nextDoc();
@@ -196,7 +196,7 @@ public class Clueweb09Parser implements DocumentParser {
 						logger.error("unsupported doc: " + id + ", "
 								+ contentType);
 						logger.debug(buf.toString());
-						logger.info(e.getMessage());
+						logger.debug(e.getMessage());
 						return getLuceneDoc(id, url,
 								title != null ? title : "", buf.toString()
 										.replaceAll("<[/!]?[^>]+>", ""),
