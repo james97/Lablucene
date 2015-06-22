@@ -108,12 +108,12 @@ public class PseudoRelevanceFeedbackSelector extends FeedbackSelector {
 							totaldoclen, doclenlist.toNativeArray() ));
 			br.close();
 			logger.info("added" +  feedbackMap.size() +" topics from file");
-			if(logger.isDebugEnabled()){
+			if(logger.isTraceEnabled()){
 				StringBuilder sb = new StringBuilder();
 				for(String tp : feedbackMap.keySet()){
 					sb.append(tp + "\t");
 				}
-				logger.debug("topics: " + sb.toString());
+				logger.trace("topics: " + sb.toString());
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

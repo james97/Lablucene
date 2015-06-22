@@ -18,6 +18,8 @@ public class RocchioTermSelector extends TermSelector {
 	private static Logger logger = Logger.getLogger(RocchioTermSelector.class);
 	private static boolean weighted = Boolean.parseBoolean(ApplicationSetup
 			.getProperty("rocchio.weighted", "false"));
+	private static boolean isNormWeight = Boolean.parseBoolean(ApplicationSetup
+            .getProperty("rocchio.normweight", "false"));
 	protected int EXPANSION_MIN_DOCUMENTS;
 	String termSelector = ApplicationSetup.getProperty("rocchio.termSelector",
 			"DFRTermSelector");
@@ -38,6 +40,7 @@ public class RocchioTermSelector extends TermSelector {
 		int effDocuments = docids.length;
 		TermSelector selector = TermSelector.getTermSelector(termSelector,
 				this.searcher);
+
 		selector.setField(field);
 		selector.setMetaInfo("normalize.weights", "false");
 		selector.setOriginalQueryTerms(originalQueryTermidSet);
@@ -45,6 +48,7 @@ public class RocchioTermSelector extends TermSelector {
 		addInfo += selector.getInfo();
 		ExpansionTerm[][] expTerms = new ExpansionTerm[effDocuments][];
 		norm(scores);
+		
 
 		// for each of the top-ranked documents
 		for (int i = 0; i < effDocuments; i++) {
@@ -58,6 +62,7 @@ public class RocchioTermSelector extends TermSelector {
 				multiWeight(oneScore[0], expTerms[i]);
 			}
 		}
+		//System.out.println("DFR term map size is " + selector.termMap.size());
 		// merge expansion terms: compute mean term weight for each term, sort
 		// again
 		TObjectFloatHashMap<String> termidWeightMap = new TObjectFloatHashMap<String>();
@@ -91,7 +96,11 @@ public class RocchioTermSelector extends TermSelector {
 		Arrays.sort(candidateTerms);
 		termMap = new HashMap<String, ExpansionTerm>();
 
-		float normaliser = candidateTerms[0].getWeightExpansion();
+		float normaliser;
+		if(isNormWeight)
+		     normaliser = candidateTerms[0].getWeightExpansion();
+		else
+		     normaliser = 1.0f;
 		if (LanguageModel) {
 			if (QEModel.PARAMETER_FREE) {
 				for (ExpansionTerm term : candidateTerms) {
@@ -112,6 +121,8 @@ public class RocchioTermSelector extends TermSelector {
 				termMap.put(term.getTerm(), term);
 			}
 		}
+		
+		//System.out.println("Rocchio term map size is " + termMap.size());
 	}
     
 	private void norm(float[] scores) {

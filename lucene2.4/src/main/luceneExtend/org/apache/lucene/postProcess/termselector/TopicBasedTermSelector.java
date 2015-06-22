@@ -5,19 +5,25 @@ package org.apache.lucene.postProcess.termselector;
 
 import gnu.trove.TObjectIntHashMap;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+
+import net.spy.memcached.AddrUtil;
+import net.spy.memcached.ConnectionFactoryBuilder;
+import net.spy.memcached.FailureMode;
+import net.spy.memcached.MemcachedClient;
 
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.apache.log4j.Logger;
 import org.apache.lucene.MetricsUtils;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.index.TermPositionVector;
 import org.apache.lucene.postProcess.QueryExpansionModel;
@@ -38,8 +44,11 @@ import org.dutir.util.symbol.SymbolTable;
  * 
  */
 
-public class TopicBasedTermSelector extends TermSelector {
+public class TopicBasedTermSelector extends TermSelector{
 	private static Logger logger = Logger.getLogger(TopicBasedTermSelector.class);
+	private static MemcachedClient mcc = null;
+	String address = "127.0.0.1:11211";
+
 	static boolean LanguageModel = Boolean.parseBoolean(ApplicationSetup
 			.getProperty("Lucene.Search.LanguageModel", "false"));
 	static int strategy = Integer.parseInt(ApplicationSetup.getProperty(
@@ -64,13 +73,18 @@ public class TopicBasedTermSelector extends TermSelector {
 			"Association.winSize", "50"));
 	static boolean withOrgScore = Boolean.parseBoolean(ApplicationSetup.getProperty(
             "TopicBasedTermSelector.withOrgScore", "false"));
-
+	static boolean useMemCacheDB = Boolean.parseBoolean(ApplicationSetup.getProperty(
+            "TopicBasedTermSelector.useMemCacheDB", "false"));
+	static boolean useAdapTopicNumber = Boolean.parseBoolean(ApplicationSetup.getProperty(
+            "TopicBasedTermSelector.useAdapTopicNumber", "true"));
+	
 	static Random RANDOM = new Random(43);
 	static short NUM_TOPICS = Short.parseShort(ApplicationSetup.getProperty(
 			"TopicBasedTermSelector.NUM_TOPICS", "5"));
 	
-	static String word2vecDataPath = ApplicationSetup.getProperty(
-			"TopicBasedTermSelector.word2vecDataPath", "text8.model.txt");
+	private String bm25_b = ApplicationSetup.getProperty(
+			"bm25.b", "0.35");
+	
 
 	// static double DOC_TOPIC_PRIOR = 0.01;
 	static double TOPIC_WORD_PRIOR = 0.01;
@@ -82,40 +96,23 @@ public class TopicBasedTermSelector extends TermSelector {
 	static int BURNIN_EPOCHS = 10;
 	static int SAMPLE_LAG = 30;
 	static int NUM_SAMPLES = 30;
-	static HashMap<String, float[]> vectorOfTerms = new HashMap<String, float[]>();
+
 
 	protected int EXPANSION_MIN_DOCUMENTS;
 	float dscores[];
+	Map<String, ExpansionTerm> tmpTermMap = null;
 
 	TObjectIntHashMap<String> dfMap = null;
 
 	public TopicBasedTermSelector() throws IOException {
 		super();
+		TopicBasedTermSelector.setMcc(new MemcachedClient(
+				new ConnectionFactoryBuilder().setDaemon(true).setFailureMode(FailureMode.Retry).build(),
+				AddrUtil.getAddresses(address)));
 		this.setMetaInfo("normalize.weights", "true");
 		this.EXPANSION_MIN_DOCUMENTS = Integer.parseInt(ApplicationSetup
 				.getProperty("expansion.mindocuments", "2"));
-		//read training data of word2vec
-		String vectline;
-		if (vectorOfTerms != null){
-			BufferedReader br = new BufferedReader(new FileReader(word2vecDataPath));
-			vectline = br.readLine();
-			Integer.parseInt(vectline.split("\\s+")[0]);
-			int vctDimension = Integer.parseInt(vectline.split("\\s+")[1]);
-			
-			while  ((vectline = br.readLine()) != null){
-				logger.info("Start reading word2vec file  " + this.word2vecDataPath);
-				String [] pairs = vectline.split("\\s+");
-				String term = pairs[0];
-				float [] vector = new float[vctDimension];
-				
-				for (int k = 0; k < vctDimension; k++)
-					vector[k] = Float.parseFloat(pairs[k+1]);
-				
-				this.vectorOfTerms.put(term, vector);
-				
-			}//end of read word2vec file
 		}
-	}
 
 	/*
 	 * (non-Javadoc)
@@ -179,6 +176,7 @@ public class TopicBasedTermSelector extends TermSelector {
 			selector.setMetaInfo("normalize.weights", "false");
 			selector.setOriginalQueryTerms(originalQueryTermidSet);
 			selector.assignTermWeights(expDocs, expscores, QEModel);
+			this.tmpTermMap = selector.termMap;
 
 			HashMap<String, ExpansionTerm> map = selector
 					.getMostWeightedTermsInHashMap(expNum);
@@ -237,16 +235,82 @@ public class TopicBasedTermSelector extends TermSelector {
 		}
 
 		// ////////////////////////////////////////////
+		LatentDirichletAllocation.GibbsSample sample = null;
+		if(!useAdapTopicNumber)
+			 sample = LatentDirichletAllocation.gibbsSampler(
+					 DOC_WORDS, NUM_TOPICS, DOC_TOPIC_PRIOR,
+					 TOPIC_WORD_PRIOR, BURNIN_EPOCHS, SAMPLE_LAG,
+					 NUM_SAMPLES, RANDOM, querytermid, backids, null);
+		else {
+			// set a large number
+			//if((!useMemCacheDB) || (this.mcc == null))
+			String key = "Topic" + topicId + "b"+ bm25_b + "expDoc" + expDoc;
+			if((useMemCacheDB) && (TopicBasedTermSelector.getMcc() != null)){
+				if (TopicBasedTermSelector.getMcc().get(key) != null){
+					Short optTopicNum = (Short)TopicBasedTermSelector.getMcc().get(key);
+					logger.info(String.format("Find optimal topic number %d for %s", optTopicNum.shortValue(), key));
+					sample = LatentDirichletAllocation.gibbsSampler(
+							 DOC_WORDS, optTopicNum.shortValue(), DOC_TOPIC_PRIOR,
+							 TOPIC_WORD_PRIOR, BURNIN_EPOCHS, SAMPLE_LAG,
+							 NUM_SAMPLES, RANDOM, querytermid, backids, null);
+					NUM_TOPICS = optTopicNum.shortValue();
+				}else{
+					double pre_perplexity = 99999999;
+					double perplexity = 9999999;
+					double THRESHOLD = 0.005d;
+					short topicNumber = 5;
+					System.out.println("Start to obtain optimal topic number");
+					while (Math.abs((pre_perplexity - perplexity) / pre_perplexity) > THRESHOLD) {
+						pre_perplexity = perplexity;
+						topicNumber += 5;
+						DOC_TOPIC_PRIOR = 2d / topicNumber;
+						sample = LatentDirichletAllocation.gibbsSampler(DOC_WORDS,
+								topicNumber, DOC_TOPIC_PRIOR, TOPIC_WORD_PRIOR,
+								BURNIN_EPOCHS, SAMPLE_LAG, NUM_SAMPLES, RANDOM,
+								querytermid, backids, null);
+						perplexity = this.getPerplexity(sample);
 
-		// LatentDirichletAllocation.GibbsSample sample =
-		// LatentDirichletAllocation
-		// .gibbsSampler(DOC_WORDS, NUM_TOPICS, DOC_TOPIC_PRIOR,
-		// TOPIC_WORD_PRIOR, BURNIN_EPOCHS, SAMPLE_LAG,
-		// NUM_SAMPLES, RANDOM, querytermid, backids, null, tAss);
-		LatentDirichletAllocation.GibbsSample sample = LatentDirichletAllocation
-				.gibbsSampler(DOC_WORDS, NUM_TOPICS, DOC_TOPIC_PRIOR,
-						TOPIC_WORD_PRIOR, BURNIN_EPOCHS, SAMPLE_LAG,
-						NUM_SAMPLES, RANDOM, querytermid, backids, null);
+					}
+					logger.info("Optimal topic number for " + expDoc + " docs is : "
+							+ topicNumber);
+					TopicBasedTermSelector.getMcc().add(key, 86400, topicNumber);
+					//remember to update NUM_TOPICS for theta
+					NUM_TOPICS = topicNumber;
+				}
+			}else{
+				double pre_perplexity = 99999999;
+				double perplexity = 9999999;
+				double THRESHOLD = 0.005d;
+				short topicNumber = 5;
+				System.out.println("Start to obtain optimal topic number");
+				while (Math.abs((pre_perplexity - perplexity) / pre_perplexity) > THRESHOLD) {
+					pre_perplexity = perplexity;
+					topicNumber += 5;
+					DOC_TOPIC_PRIOR = 2d / topicNumber;
+					sample = LatentDirichletAllocation.gibbsSampler(DOC_WORDS,
+							topicNumber, DOC_TOPIC_PRIOR, TOPIC_WORD_PRIOR,
+							BURNIN_EPOCHS, SAMPLE_LAG, NUM_SAMPLES, RANDOM,
+							querytermid, backids, null);
+					perplexity = this.getPerplexity(sample);
+
+				}
+				logger.info("Optimal topic number for " + expDoc + " docs is : "
+						+ topicNumber);
+				TopicBasedTermSelector.getMcc().add(key, 86400, topicNumber);
+				//remember to update NUM_TOPICS for theta
+				NUM_TOPICS = topicNumber;
+			}
+			
+		}
+				
+//		for(int epoch = 1; epoch <=BURNIN_EPOCHS; epoch = epoch + 1){
+//			sample = LatentDirichletAllocation.gibbsSampler(DOC_WORDS,
+//			topicNumber, DOC_TOPIC_PRIOR, TOPIC_WORD_PRIOR,
+//			epoch, SAMPLE_LAG, NUM_SAMPLES, RANDOM,
+//			querytermid, backids, null);
+//			perplexity = this.getPerplexity(sample);
+//			logger.warn("Perplexity when epoch is "+ epoch +" for " + expDoc + " docs is : " + perplexity);
+//		}
 
 		LatentDirichletAllocation lda = sample.lda();
 		short[][] qsamples = lda.sampleTopics(querytermid, numSamples, burnin,
@@ -266,13 +330,15 @@ public class TopicBasedTermSelector extends TermSelector {
 
 		selectTerm(SYMBOL_TABLE, sample, QEModel,
 				theta, querytermid, lda, tAss);
+		
+		TopicBasedTermSelector.getMcc().shutdown();
 	}
 
-	float[] sampleTheta(int numTopics, LatentDirichletAllocation lda,
-			int[] words) {
+	  float[] sampleTheta(int numTopics, LatentDirichletAllocation lda,
+			int[] words) {	
 		short[][] qsamples = lda.sampleTopics(words, numSamples, burnin,
 				sampleLag, RANDOM);
-
+		
 		float theta[] = new float[numTopics];
 		java.util.Arrays.fill(theta, 0);
 
@@ -339,6 +405,7 @@ public class TopicBasedTermSelector extends TermSelector {
 				for (int j = 0; j < sample.numTopics(); j++) {
 					buf.append(Rounding.round(sample.documentTopicProb(i, j), 5)
 							+ "\t");
+					docTopicProbs[i][j] =  Rounding.round(sample.documentTopicProb(i, j), 5);
 				}
 				buf.append("\n");
 			}
@@ -368,11 +435,16 @@ public class TopicBasedTermSelector extends TermSelector {
                  qtermTopicProb[m][k] = (float) sample.topicWordProb(index[k], id);
          }
      
+
         TermsCache.Item[] items = new TermsCache.Item[len];
         for (int i = 0; i < len; i++) {
             String term = SYMBOL_TABLE.idToSymbol(i);
             items[i] = getItem(term);
          }
+
+
+        int maxQueryTermId = querytermid[querytermid.length - 1];
+
 		if (strategy == 1) { // take advantage of the topic with the highest
 								// prob
 			float totalweight = 0;
@@ -394,14 +466,20 @@ public class TopicBasedTermSelector extends TermSelector {
 						continue;
 					}
 					double topicProb = sample.topicWordProb(maxTopic, i);
-					double onedocWeight = (1 - beta) * docProb + beta
-							* topicProb;
+					double onedocWeight = docProb;
 					// one doc weight is the original doc weight smoothed by the
 					// topic prob
 					QEModel.setTotalDocumentLength(1);
 					weight += QEModel.score((float) onedocWeight, TF, DF);
 				}
 				weight /= feedbackNum;
+				//nerv the performance of basic topic method
+				double topicProb = sample.topicWordProb(maxTopic, i);
+					weight = (float) ((1 - beta) * weight + beta
+	                        * topicProb);
+	                System.out.println("topic weight is " + topicProb + 
+	                        "doc weight " + weight);
+				
 				if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
 					weight = 0;
 				}
@@ -425,6 +503,11 @@ public class TopicBasedTermSelector extends TermSelector {
 			// prob and rank terms by their deviation in topics
 			float totalweight = 0;
 			int feedbackNum = sample.numDocuments();
+			String key = "Topic" + topicId + "b"+ bm25_b + "expDoc" + expDoc;
+			short topicNum  = 0;
+			if(TopicBasedTermSelector.mcc.get(key) != null)
+				 topicNum = ((Short)TopicBasedTermSelector.mcc.get(key)).shortValue();
+			
 			for (int i = 0; i < len; i++) {
 				String term = SYMBOL_TABLE.idToSymbol(i);
 				TermsCache.Item item = getItem(term);
@@ -434,30 +517,58 @@ public class TopicBasedTermSelector extends TermSelector {
 
 				weight = 0;
 				
-				double []topicProb = new double[index.length];
-				for (int k = 0; k < index.length; k++)
-					topicProb[k] = sample.topicWordProb(index[k], i);
-				
-				StandardDeviation sd =  new StandardDeviation();
-				double termDeviation = sd.evaluate(topicProb);
-				
-				double topicWeight = (float) Math.sqrt(termDeviation * sample.topicWordProb(maxTopic, i));
-				
-				
-				for (int d = 0; d < feedbackNum; d++) {
-					double docProb = sample.docWordCount(d, i)
-							/ (float) sample.documentLength(d);
-					if (docProb == 0) {
-						continue;
-					}
-					double onedocWeight = (1 - beta) * docProb + beta
-							* topicWeight;
-					// one doc weight is the original doc weight smoothed by the
-					// topic prob
-					QEModel.setTotalDocumentLength(1);
-					weight += QEModel.score((float) onedocWeight, TF, DF);
+				String topicWeightKey = key +"S2topicNum" + topicNum + term; 
+                
+                //get the topic distribution of current term
+                double topicDevWeight = 0.0;
+				if ((TopicBasedTermSelector.mcc != null) && (topicNum != 0) && (useMemCacheDB)
+						&& (TopicBasedTermSelector.mcc.get(topicWeightKey) != null)) {
+					topicDevWeight = (Double) TopicBasedTermSelector.mcc
+							.get(topicWeightKey);
+					logger.debug(String.format(
+							"found existing dev weight for term %s in key %s",
+							term, topicWeightKey));
+				} else {
+
+					double[] topicProb = new double[index.length];
+					for (int k = 0; k < index.length; k++)
+						topicProb[k] = sample.topicWordProb(index[k], i);
+
+					StandardDeviation sd = new StandardDeviation();
+					double termDeviation = sd.evaluate(topicProb);
+
+					topicDevWeight = (float) Math.sqrt(termDeviation
+							* sample.topicWordProb(maxTopic, i));
+
+					TopicBasedTermSelector.mcc.set(topicWeightKey, 86400,
+							topicDevWeight);
+
 				}
-				weight /= feedbackNum;
+//				for (int d = 0; d < feedbackNum; d++) {
+//					double docProb = sample.docWordCount(d, i)
+//							/ (float) sample.documentLength(d);
+//					if (docProb == 0) {
+//						continue;
+//					}
+//					double onedocWeight = docProb;
+//					
+//					// one doc weight is the original doc weight smoothed by the
+//					// topic prob
+//					QEModel.setTotalDocumentLength(1);
+//					weight += QEModel.score((float) onedocWeight, TF, DF);
+//				}
+//				weight /= feedbackNum;
+//				
+				if (this.tmpTermMap.get(term) != null) 
+				    logger.debug(String.format("term %s has a rocchio weight %f", 
+				            term, this.tmpTermMap.get(term).getWeightExpansion()));
+				
+				if(expTag){
+				    if(this.tmpTermMap.get(term) != null)
+				        weight = (float) ((1 - beta) * this.tmpTermMap.get(term).getWeightExpansion() + beta *topicDevWeight);
+				    else
+				        weight = (float) ((1 - beta) * weight + beta * topicDevWeight);
+				}
 				
 				if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
 					weight = 0;
@@ -478,27 +589,83 @@ public class TopicBasedTermSelector extends TermSelector {
 				}
 			}
 
-		} else if (strategy == 4) { // add by Jun Miao
-			// take advantage of word2Vec
+
+		} else if (strategy == 5) { // add by Jun Miao
+			// compare the probability distribution of query terms and 
+			//candidate feedback terms.
 
 			float totalweight = 0;
-            sample.numDocuments();
+			int feedbackNum = sample.numDocuments();
+			String key = "Topic" + topicId + "b"+ bm25_b + "expDoc" + expDoc;
+			short topicNum  = 0;
+			if(TopicBasedTermSelector.mcc.get(key) != null)
+				 topicNum = ((Short)TopicBasedTermSelector.mcc.get(key)).shortValue();
+			
             for (int i = 0; i < len; i++) {
-            	String term = SYMBOL_TABLE.idToSymbol(i);
-            	TermsCache.Item item = getItem(term);
-            	float weight = 0;
-            	IndexReader ir = this.searcher.getIndexReader();
-            	ir.numDocs();
-    
+            	 String term = SYMBOL_TABLE.idToSymbol(i);
+                 TermsCache.Item item = getItem(term);
+                 float TF = item.ctf;
+                 float DF = item.df;
+                 float weight = 0;
+                 double topicWeight = 0;
+                 
+                 String topicWeightKey = key +"S5topicNum" + topicNum + term; 
+                 
+                 //get the topic distribution of current term
+                 if ((TopicBasedTermSelector.mcc != null) && (topicNum != 0) && 
+                		 (useMemCacheDB) && (TopicBasedTermSelector.mcc.get(topicWeightKey) != null)){
+                	 topicWeight = (Double)TopicBasedTermSelector.mcc.get(topicWeightKey);
+                 
+					logger.debug(String.format(
+							"found existing dev weight for term %s in key %s",
+							term, topicWeightKey));
+                 }else{
+					double[] topicProb = new double[index.length];
+					for (int k = 0; k < index.length; k++)
+						topicProb[k] = (float) sample
+								.topicWordProb(index[k], i);
 
-            	//calculate the weight of a feedback term based on it's word2vec
-            	//similarity to query terms
-            	float [] termVector = this.vectorOfTerms.get(term);
-            	for (int t = 0; t < qterms.length; t++){
-            		float [] qtermVector = this.vectorOfTerms.get(qterms[t]);
-            		weight += MetricsUtils.cosine_similarity(termVector, qtermVector);
-            	}
-            		weight /= qterms.length;
+					for (int m = 0; m < qterms.length; m++) {
+						topicWeight += MetricsUtils.cosine_similarity(
+								topicProb, qtermTopicProb[m]);
+					}
+
+					topicWeight /= qterms.length;
+					TopicBasedTermSelector.mcc.set(topicWeightKey, 86400, topicWeight);
+				}
+                 
+//                 for (int d = 0; d < feedbackNum; d++) {
+//                     double docProb = sample.docWordCount(d, i)
+//                                     / (float) sample.documentLength(d);
+//                     if (docProb == 0) {
+//                             continue;
+//                     }                                   
+//                     double docWeight = QEModel.score((float) docProb, TF, DF);
+//                     
+//                     //topicWeight and doc weight are not on the same level
+////                     double onedocWeight = (1 - beta) * docWeight + beta
+////                                     * topicWeight;
+//                     
+//                    // double onedocWeight = (1 + beta * topicWeight) * docWeight;
+//                     double onedocWeight = beta * (1 +  topicWeight)* sample.topicWordProb(maxTopic, i)
+//                             + (1 - beta) * docWeight;
+//                     // one doc weight is the original doc weight smoothed by the
+//                     // topic prob
+//                     QEModel.setTotalDocumentLength(1);
+//                     //weight += QEModel.score((float) onedocWeight, TF, DF);
+//                     weight += onedocWeight;
+//             }
+
+				if (this.tmpTermMap.get(term) != null) 
+				    logger.debug(String.format("term %s has a rocchio weight %f", 
+				            term, this.tmpTermMap.get(term).getWeightExpansion()));
+				
+				if(expTag){
+				    if(this.tmpTermMap.get(term) != null)
+				        weight = (float) ((1 - beta) * this.tmpTermMap.get(term).getWeightExpansion() + beta *topicWeight);
+				    else
+				        weight = (float) ((1 - beta) * weight + beta * topicWeight);;
+				}
 
             	if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
             		weight = 0;
@@ -519,20 +686,67 @@ public class TopicBasedTermSelector extends TermSelector {
             	}
             }
 
-		}else if (strategy == 5) { // add by Jun Miao
-			// compare the probability distribution of query terms and 
-			//candidate feedback terms.
+		}else if (strategy == 6) { // add by Jun Miao
+		//Combine the dev and similarity method	
 
 			float totalweight = 0;
-            sample.numDocuments();
+			int feedbackNum = sample.numDocuments();
+			String key = "Topic" + topicId + "b"+ bm25_b + "expDoc" + expDoc;
+			short topicNum  = 0;
+			if(TopicBasedTermSelector.mcc.get(key) != null)
+				 topicNum = ((Short)TopicBasedTermSelector.mcc.get(key)).shortValue();
+			
             for (int i = 0; i < len; i++) {
-            	String term = SYMBOL_TABLE.idToSymbol(i);
-            	TermsCache.Item item = getItem(term);
-            	float weight = 0;
-            	IndexReader ir = this.searcher.getIndexReader();
-            	ir.numDocs();
-            	
+            	 String term = SYMBOL_TABLE.idToSymbol(i);
+                 TermsCache.Item item = getItem(term);
+                 float TF = item.ctf;
+                 float DF = item.df;
+                 float weight = 0;
+                 double topicSimWeight = 0;
+                 
+                 String topicWeightKey = key +"topicNum" + topicNum + term; 
+                 
+                 //get the topic distribution of current term
+                 if ((TopicBasedTermSelector.mcc != null) && (topicNum != 0) && 
+                		 (useMemCacheDB) && (TopicBasedTermSelector.mcc.get(topicWeightKey) != null))
+                	 topicSimWeight = (Double)TopicBasedTermSelector.mcc.get(topicWeightKey);
+                 else{
+					double[] topicProb = new double[index.length];
+					for (int k = 0; k < index.length; k++)
+						topicProb[k] = (float) sample
+								.topicWordProb(index[k], i);
 
+					for (int m = 0; m < qterms.length; m++) {
+						topicSimWeight += MetricsUtils.cosine_similarity(
+								topicProb, qtermTopicProb[m]);
+					}
+
+					topicSimWeight /= qterms.length;
+					TopicBasedTermSelector.mcc.set(topicWeightKey, 86400, topicSimWeight);
+				}
+
+				double[] topicProb = new double[index.length];
+				for (int k = 0; k < index.length; k++)
+					topicProb[k] = sample.topicWordProb(index[k], i);
+
+				StandardDeviation sd = new StandardDeviation();
+				double termDeviation = sd.evaluate(topicProb);
+
+				double topicDevWeight = (float) Math.sqrt(termDeviation
+						* sample.topicWordProb(maxTopic, i));
+
+				if (this.tmpTermMap.get(term) != null) 
+				    logger.debug(String.format("term %s has a rocchio weight %f", 
+				            term, this.tmpTermMap.get(term).getWeightExpansion()));
+				
+				if(expTag){
+				    if(this.tmpTermMap.get(term) != null)
+				        weight = (float) ((1 + topicSimWeight/4)*((1 - beta) * this.tmpTermMap.get(term).getWeightExpansion() +
+				        		beta *topicDevWeight));
+				    else
+				        weight = (float) ((1 + topicSimWeight/4)* ((1 - beta) * weight + beta * topicDevWeight));
+				}
+            	
             	if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
             		weight = 0;
             	}
@@ -743,8 +957,12 @@ public class TopicBasedTermSelector extends TermSelector {
 	 */
 	@Override
 	public String getInfo() {
-		return "TopicSel_s=" + strategy + "t=" + NUM_TOPICS + "beta=" + beta
+		if(useAdapTopicNumber)
+			return "TopicSel_s=" + strategy + "t=" + "Adap" + "beta=" + beta
 				+ "expTag=" + expTag;
+		else
+			return "TopicSel_s=" + strategy + "t=" + NUM_TOPICS + "beta=" + beta
+					+ "expTag=" + expTag;
 	}
 	
 	private double[] getFeedDocScores(int strategy, int feedDocNum, float[] orgDocScores, double[][] docTopicProbs, 
@@ -810,14 +1028,51 @@ public class TopicBasedTermSelector extends TermSelector {
 	    return feedbackDocScores;
 	}
 	
-	
-	
+	public double getPerplexity(LatentDirichletAllocation.GibbsSample sample ){
+        int docNum = sample.numDocuments();
+        int topicNum = sample.numTopics();
+        int termNum = sample.numWords();
+        int  wordNum = sample.numTokens();
+        
+        double [][] docTopicProb = new double[docNum][topicNum];
+        double [][] topicTermProb = new double[topicNum][termNum];
+        for (int doc = 0; doc < docNum; doc++)
+            for (int topic = 0; topic < topicNum; topic++)
+                docTopicProb[doc][topic] = sample.documentTopicProb(doc, topic);
+        
+        for(int topic = 0; topic < topicNum; topic++)
+            for (int term = 0; term < termNum; term++)
+               topicTermProb[topic][term] = sample.topicWordProb(topic, term);
+        
+        double [][] pword = new double[docNum][termNum];  
+		for (int doc = 0; doc < docNum; doc++)
+			for (int term = 0; term < termNum; term++)
+				for (int topic = 0; topic < topicNum; topic++)
+					pword[doc][term] += docTopicProb[doc][topic]
+							* topicTermProb[topic][term];
+		
+		double [] logDocProb = new double[docNum]; 
+		
+		for (int doc = 0; doc < docNum; doc++)
+			for (int term = 0; term < termNum; term++)
+				logDocProb[doc] += sample.docWordCount(doc, term) * Math.log(pword[doc][term]);
+				
+				
+         double sum = 0.0d;
+         for  (int doc = 0; doc < docNum; doc++)
+        	 sum += logDocProb[doc]; 
+        	 
+         double perplexity = Math.exp(-1 * sum/wordNum);
+         logger.debug(String.format("Topic number is %d and perplexity is %f", topicNum, perplexity));
+         return perplexity;
+    }
     
+	
     
     
 
 	/**
-	 * @param args
+	 * @param argsqsamples
 	 */
 	public static void main(String[] args) {
 		new StringBuilder();
@@ -828,6 +1083,14 @@ public class TopicBasedTermSelector extends TermSelector {
 			TermPositionVector[] tfvs, QueryExpansionModel QEModel) {
 		// TODO Auto-generated method stub
 
+	}
+
+	private static MemcachedClient getMcc() {
+		return mcc;
+	}
+
+	public static void setMcc(MemcachedClient mcc) {
+		TopicBasedTermSelector.mcc = mcc;
 	}
 
 }

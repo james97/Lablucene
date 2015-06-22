@@ -1,0 +1,2 @@
+#add the qrels files to use for evaluation
+./TopicQrel/qrels.trec8.adhoc.parts1-5
