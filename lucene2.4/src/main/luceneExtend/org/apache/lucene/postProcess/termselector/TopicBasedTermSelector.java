@@ -493,6 +493,11 @@ public class TopicBasedTermSelector extends TermSelector{
 			// prob and rank terms by their deviation in topics
 			float totalweight = 0;
 			int feedbackNum = sample.numDocuments();
+			String key = "Topic" + topicId + "b"+ bm25_b + "expDoc" + expDoc;
+			short topicNum  = 0;
+			if(TopicBasedTermSelector.mcc.get(key) != null)
+				 topicNum = ((Short)TopicBasedTermSelector.mcc.get(key)).shortValue();
+			
 			for (int i = 0; i < len; i++) {
 				String term = SYMBOL_TABLE.idToSymbol(i);
 				TermsCache.Item item = getItem(term);
@@ -502,40 +507,57 @@ public class TopicBasedTermSelector extends TermSelector{
 
 				weight = 0;
 				
-				double []topicProb = new double[index.length];
-				for (int k = 0; k < index.length; k++)
-					topicProb[k] = sample.topicWordProb(index[k], i);
-				
-				StandardDeviation sd =  new StandardDeviation();
-				double termDeviation = sd.evaluate(topicProb);
-				
-				double topicWeight = (float) Math.sqrt(termDeviation * sample.topicWordProb(maxTopic, i));
-				
-				
-				for (int d = 0; d < feedbackNum; d++) {
-					double docProb = sample.docWordCount(d, i)
-							/ (float) sample.documentLength(d);
-					if (docProb == 0) {
-						continue;
-					}
-					double onedocWeight = docProb;
-					
-					// one doc weight is the original doc weight smoothed by the
-					// topic prob
-					QEModel.setTotalDocumentLength(1);
-					weight += QEModel.score((float) onedocWeight, TF, DF);
+				String topicWeightKey = key +"S2topicNum" + topicNum + term; 
+                
+                //get the topic distribution of current term
+                double topicDevWeight = 0.0;
+				if ((TopicBasedTermSelector.mcc != null) && (topicNum != 0) && (useMemCacheDB)
+						&& (TopicBasedTermSelector.mcc.get(topicWeightKey) != null)) {
+					topicDevWeight = (Double) TopicBasedTermSelector.mcc
+							.get(topicWeightKey);
+					logger.debug(String.format(
+							"found existing dev weight for term %s in key %s",
+							term, topicWeightKey));
+				} else {
+
+					double[] topicProb = new double[index.length];
+					for (int k = 0; k < index.length; k++)
+						topicProb[k] = sample.topicWordProb(index[k], i);
+
+					StandardDeviation sd = new StandardDeviation();
+					double termDeviation = sd.evaluate(topicProb);
+
+					topicDevWeight = (float) Math.sqrt(termDeviation
+							* sample.topicWordProb(maxTopic, i));
+
+					TopicBasedTermSelector.mcc.set(topicWeightKey, 86400,
+							topicDevWeight);
+
 				}
-				weight /= feedbackNum;
-				
+//				for (int d = 0; d < feedbackNum; d++) {
+//					double docProb = sample.docWordCount(d, i)
+//							/ (float) sample.documentLength(d);
+//					if (docProb == 0) {
+//						continue;
+//					}
+//					double onedocWeight = docProb;
+//					
+//					// one doc weight is the original doc weight smoothed by the
+//					// topic prob
+//					QEModel.setTotalDocumentLength(1);
+//					weight += QEModel.score((float) onedocWeight, TF, DF);
+//				}
+//				weight /= feedbackNum;
+//				
 				if (this.tmpTermMap.get(term) != null) 
 				    logger.debug(String.format("term %s has a rocchio weight %f", 
 				            term, this.tmpTermMap.get(term).getWeightExpansion()));
 				
 				if(expTag){
 				    if(this.tmpTermMap.get(term) != null)
-				        weight = (float) ((1 - beta) * this.tmpTermMap.get(term).getWeightExpansion() + beta *topicWeight);
+				        weight = (float) ((1 - beta) * this.tmpTermMap.get(term).getWeightExpansion() + beta *topicDevWeight);
 				    else
-				        weight = (float) ((1 - beta) * weight + beta * topicWeight);;
+				        weight = (float) ((1 - beta) * weight + beta * topicDevWeight);
 				}
 				
 				if (dfMap.get(term) < EXPANSION_MIN_DOCUMENTS) {
@@ -576,13 +598,17 @@ public class TopicBasedTermSelector extends TermSelector{
                  float weight = 0;
                  double topicWeight = 0;
                  
-                 String topicWeightKey = key +"topicNum" + topicNum + term; 
+                 String topicWeightKey = key +"S5topicNum" + topicNum + term; 
                  
                  //get the topic distribution of current term
                  if ((TopicBasedTermSelector.mcc != null) && (topicNum != 0) && 
-                		 (useMemCacheDB) && (TopicBasedTermSelector.mcc.get(topicWeightKey) != null))
+                		 (useMemCacheDB) && (TopicBasedTermSelector.mcc.get(topicWeightKey) != null)){
                 	 topicWeight = (Double)TopicBasedTermSelector.mcc.get(topicWeightKey);
-                 else{
+                 
+					logger.debug(String.format(
+							"found existing dev weight for term %s in key %s",
+							term, topicWeightKey));
+                 }else{
 					double[] topicProb = new double[index.length];
 					for (int k = 0; k < index.length; k++)
 						topicProb[k] = (float) sample

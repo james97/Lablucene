@@ -124,8 +124,8 @@ word2vec="./word2vec/pyword2vec_jeff/text8.model.txt"
        #for topicBeta in 0 0.2 0.4 0.6 0.8 1.0; do
 		for topicBeta in 0.0; do
 #	for ids in "${range[@]}" ;do
-     bin/waitForJobs.sh  trec_lucene.sh 1 ;
-     bin/trec_lucene.sh -r -q $General $part --expansion.mindocuments 1 --TopicBasedTermSelector.expTag true --rocchio.weighted true --expansion.terms $terms --expansion.documents $docs --rocchio.beta $beta  --TopicBasedTermSelector.word2vecDataPath $word2vec --TopicBasedTermSelector.beta $topicBeta  --dlm.mu 1500 --TopicBasedTermSelector.strategy 2 --TopicBasedTermSelector.expNum $terms --TopicBasedTermSelector.expDoc $docs --rocchio.normweight false &
+     bin/waitForJobs.sh  trec_lucene.sh 2 ;
+     bin/trec_lucene.sh -r -q $General $part --expansion.mindocuments 1 --TopicBasedTermSelector.expTag true --rocchio.weighted true --expansion.terms $terms --expansion.documents $docs --rocchio.beta $beta --TopicBasedTermSelector.useAdapTopicNumber true --TopicBasedTermSelector.useMemCacheDB true --TopicBasedTermSelector.beta $topicBeta  --dlm.mu 1500 --TopicBasedTermSelector.strategy 5 --TopicBasedTermSelector.expNum $terms --TopicBasedTermSelector.expDoc $docs --rocchio.normweight true  &
 
         done
       # done
@@ -186,8 +186,8 @@ Block
 ##################################################################################
 
 ###############Eval############################
-#bin/waitForJobs.sh  trec_lucene.sh 1;
-#bin/trec_lucene.sh -e $resultpath $output $General --Lucene.TRECQuerying.outputformat TRECDocidOutputFormat
+bin/waitForJobs.sh  trec_lucene.sh 1;
+bin/trec_lucene.sh -e $resultpath $output $General --Lucene.TRECQuerying.outputformat TRECDocidOutputFormat
 ##############################################
 ##############################################################################
 exit

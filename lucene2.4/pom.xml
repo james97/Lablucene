@@ -144,11 +144,10 @@
   		<groupId>javatar</groupId>
   		<artifactId>javatar</artifactId>
   	</dependency>
-	  <dependency>
-		<groupId>spy</groupId>
-		<artifactId>spymemcached</artifactId>
-		<scope>provided</scope>
-	</dependency>
+  	<dependency>
+  		<groupId>spy</groupId>
+  		<artifactId>spymemcached</artifactId>
+  	</dependency>
   </dependencies>
   <dependencyManagement>
   	<dependencies>
