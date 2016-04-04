@@ -35,7 +35,7 @@ public class LdaReportingHandler implements ObjectHandler<LatentDirichletAllocat
         }
     }
 
-    void fullReport(LatentDirichletAllocation.GibbsSample sample,
+    public void fullReport(LatentDirichletAllocation.GibbsSample sample,
                     int maxWordsPerTopic,
                     int maxTopicsPerDoc,
                     boolean reportTokens) {
