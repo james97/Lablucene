@@ -376,8 +376,9 @@ public class TrecLucene {
 
 	/**
 	 * Calls the required classes from Terrier.
+	 * @throws IOException 
 	 */
-	public void run() {
+	public void run() throws IOException {
 		if (printVersion) {
 			version();
 			return;
@@ -521,7 +522,9 @@ public class TrecLucene {
 			}
 		}
 		else if(topicModeling){
-		    
+		    /**Apply LDA on the whole collection and write the **/
+		    TopicModeling tm = new TopicModeling();
+		    tm.getTopics();
 		}
 
 		long endTime = System.currentTimeMillis();
@@ -529,7 +532,7 @@ public class TrecLucene {
 				+ " seconds.");
 	}
 
-	public void applyOptions(int status) {
+	public void applyOptions(int status) throws IOException {
 		switch (status) {
 		case ERROR_NO_ARGUMENTS:
 			usage();

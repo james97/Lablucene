@@ -158,6 +158,7 @@ public class TopicBasedTermSelector extends TermSelector {
 		dfMap = new TObjectIntHashMap<String>();
 		for (int i = 0; i < docids.length; i++) {
 			int docid = docids[i];
+			System.out.println(docids[i]);
 			TermFreqVector tfv = null;
 			try {
 				tfv = this.searcher.getIndexReader().getTermFreqVector(docid,

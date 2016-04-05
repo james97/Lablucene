@@ -95,7 +95,7 @@ public class Docno2DocInnerID {
 	 * @param effDocuments
 	 * @return return the inner id of a doc
 	 */
-	protected static String getDocId(String docno) {
+	public static String getDocId(String docno) {
 		try {
 			TermDocs tdocs = searcher.getIndexReader().termDocs(new Term(idtag, docno));
 			if(tdocs.next()){

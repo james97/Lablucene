@@ -1,15 +1,21 @@
 package org.dutir.lucene.util;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.aliasi.cluster.LatentDirichletAllocation;
-
 import com.aliasi.corpus.ObjectHandler;
-
 import com.aliasi.symbol.SymbolTable;
-
 import com.aliasi.util.ObjectToCounterMap;
 import com.aliasi.util.Strings;
-
-import java.util.List;
 
 
 public class LdaReportingHandler implements ObjectHandler<LatentDirichletAllocation.GibbsSample> {
@@ -117,6 +123,66 @@ public class LdaReportingHandler implements ObjectHandler<LatentDirichletAllocat
         }
     }
 
+    public void storeDocTopicReport(LatentDirichletAllocation.GibbsSample sample,
+            int [] docIds,
+            boolean reportTokens,
+            String outputPath) throws IOException {
+        
+        System.out.println("\nStore Doc Topic Report");
+
+        int numTopics = sample.numTopics();
+        int numDocs = sample.numDocuments();
+        File fx = new File(outputPath);
+        FileWriter fw = new FileWriter(fx, false);
+        
+        for (int doc = 0; doc < numDocs; ++doc) {
+
+            int docCount = 0;
+            for (int topic = 0; topic < numTopics; ++topic)
+                docCount += sample.documentTopicCount(doc,topic);
+            Map<Integer, Integer> counter = new HashMap<Integer, Integer>();
+            for (int topic = 0; topic < numTopics; ++topic)
+                counter.put(Integer.valueOf(topic),sample.documentTopicCount(doc,topic));
+            //List<Integer> topTopics = counter.keysOrderedByCountList();
+            List<Integer> Topics = new ArrayList<Integer>(counter.keySet());
+            System.out.println("\nDOC " + doc);
+            System.out.println("TOPIC    COUNT    PROB");
+            System.out.println("----------------------");
+            double[] topicProbs = new double[numTopics];
+            DecimalFormat df = new DecimalFormat("#.####");
+            df.setRoundingMode(RoundingMode.CEILING);
+            String dataStored = String.format("%d\t", docIds[doc]);
+            
+            for (int topicIndex = 0; topicIndex < Topics.size(); ++topicIndex) {
+                int topic = Topics.get(topicIndex);
+                double docTopicPrior = sample.documentTopicPrior();
+                String docTopicProb = df.format((sample.documentTopicCount(doc,topic) + docTopicPrior) 
+                        / (docCount + numTopics * docTopicPrior));
+//                System.out.printf("%5d  %7d   %4.3f\n",
+//                                  topic,
+//                                  docTopicCount,    
+//                                  docTopicProb);
+                topicProbs[topicIndex] = Double.parseDouble(docTopicProb);
+                dataStored = dataStored + docTopicProb + "\t";
+            }
+            fw.write(dataStored + "\n");
+            if (doc % 10 == 0)
+                fw.flush();
+            System.out.println(String.format("%d " + Arrays.toString(topicProbs), docIds[doc]));
+            if (!reportTokens) continue;
+            int numDocTokens = sample.documentLength(doc);
+            for (int tok = 0; tok < numDocTokens; ++tok) {
+                int symbol = sample.word(doc,tok);
+                short topic = sample.topicSample(doc,tok);
+                String word = mSymbolTable.idToSymbol(symbol);
+                System.out.print(word + "(" + topic + ") ");
+            }
+            System.out.println();
+        
+             }
+        
+        fw.close();
+        }
 
     static double binomialZ(double wordCountInDoc, double wordsInDoc,
                             double wordCountinCorpus, double wordsInCorpus) {

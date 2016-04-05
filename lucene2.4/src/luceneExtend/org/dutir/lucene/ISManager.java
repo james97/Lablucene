@@ -169,9 +169,6 @@ public class ISManager {
 		String[] searchFeilds = fieldstr.split("\\s*,\\s*");
 		Analyzer analyzer = AnalyzerManager.getFromPropertyFile();
 		
-		String postProcess = ApplicationSetup.getProperty(
-				"Lucene.PostProcess", "");
-		String postProcesses[] = postProcess.split("\\s*,\\s*");
 		Searcher searcher = getSearcheFromPropertyFile();
 		float len = searcher.getAverageLength(searchFeilds[0]);
 		System.out.println("the average length of filed: " + searchFeilds[0] + " is " + len);
