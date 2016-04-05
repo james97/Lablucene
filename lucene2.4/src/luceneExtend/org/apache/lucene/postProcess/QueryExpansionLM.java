@@ -46,9 +46,10 @@ public class QueryExpansionLM extends QueryExpansion {
 	/**
 	 * when using QEModel.PARAMETER_FREE==true, we normalize the term by max
 	 * when using QEModel.PARAMETER_FREE==false, we normalize the term by sum()
+	 * @throws IOException 
 	 */
 	public TopDocCollector postProcess(RBooleanQuery query,
-			TopDocCollector topDoc, Searcher seacher) {
+			TopDocCollector topDoc, Searcher seacher) throws IOException {
 		setup(query, topDoc, seacher); // it is necessary
 		int numberOfTermsToReweight = Math.max(
 				ApplicationSetup.EXPANSION_TERMS, bclause.length);
@@ -173,10 +174,11 @@ public class QueryExpansionLM extends QueryExpansion {
 	 * @param QEModel
 	 * @param selector
 	 * @return
+	 * @throws IOException 
 	 */
 	public ExpansionTerm[] expandPerDoc(int[] docIDs, float scores[],
 			int numberOfTermsToReweight, QueryExpansionModel QEModel,
-			TermSelector selector) {
+			TermSelector selector) throws IOException {
 		// selector.setMetaInfo("normalize.weights", "false");
 		int effDocuments = docIDs.length;
 		ExpansionTerm[][] expTerms = new ExpansionTerm[effDocuments][];
@@ -246,7 +248,7 @@ public class QueryExpansionLM extends QueryExpansion {
 
 	public ExpansionTerm[] expandFromDocuments(int[] docIDs, float scores[],
 			int numberOfTermsToReweight, QueryExpansionModel QEModel,
-			TermSelector selector) {
+			TermSelector selector) throws IOException {
 		if (this.termSet != null)		
 			selector.setOriginalQueryTerms(termSet);
 		selector.assignTermWeights(docIDs, scores, QEModel);

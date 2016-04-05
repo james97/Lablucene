@@ -259,7 +259,7 @@ public class MitraReRankingPostProcess extends QueryExpansion {
 	}
 
 	public TopDocCollector postProcess(RBooleanQuery query,
-			TopDocCollector topDoc, Searcher seacher) {
+			TopDocCollector topDoc, Searcher seacher) throws IOException {
 		setup(query, topDoc, seacher); // it is necessary
 		try {
 			pre_process();

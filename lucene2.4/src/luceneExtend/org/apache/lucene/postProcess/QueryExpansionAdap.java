@@ -40,7 +40,7 @@ public class QueryExpansionAdap extends QueryExpansion {
 	}
 
 	public TopDocCollector postProcess(RBooleanQuery query,
-			TopDocCollector topDoc, Searcher seacher) {
+			TopDocCollector topDoc, Searcher seacher) throws IOException {
 		setup(query, topDoc, seacher); // it is necessary
 
 		int numberOfTermsToReweight = Math.max(ApplicationSetup.EXPANSION_TERMS, bclause.length);
@@ -173,7 +173,7 @@ public class QueryExpansionAdap extends QueryExpansion {
 
 	public ExpansionTerm[] expandFromDocuments(int[] docIDs, float scores[], 
 			int numberOfTermsToReweight, QueryExpansionModel QEModel,
-			TermSelector selector) {
+			TermSelector selector) throws IOException {
 
 		if(logger.isDebugEnabled())  logger.debug("Number of feedback documents: "
 				+ docIDs.length);

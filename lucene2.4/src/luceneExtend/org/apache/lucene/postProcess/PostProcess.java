@@ -3,6 +3,8 @@
  */
 package org.apache.lucene.postProcess;
 
+import java.io.IOException;
+
 import org.apache.lucene.search.RBooleanQuery;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.TopDocCollector;
@@ -14,6 +16,6 @@ import org.apache.lucene.search.TopDocCollector;
  */
 public interface PostProcess {
 	
-	TopDocCollector postProcess(RBooleanQuery query, TopDocCollector topDoc, Searcher seacher);
+	TopDocCollector postProcess(RBooleanQuery query, TopDocCollector topDoc, Searcher seacher) throws IOException;
 	public String getInfo();
 }

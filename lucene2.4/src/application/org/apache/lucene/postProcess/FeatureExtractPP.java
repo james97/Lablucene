@@ -143,7 +143,7 @@ public class FeatureExtractPP extends QueryExpansion {
 	 * .search.TopDocCollector, org.apache.lucene.search.Searcher)
 	 */
 	public TopDocCollector postProcess(RBooleanQuery query,
-			TopDocCollector topDoc, Searcher seacher) {
+			TopDocCollector topDoc, Searcher seacher) throws IOException {
 		setup(query, topDoc, seacher); // it is necessary
 
 //		output(topDoc);
