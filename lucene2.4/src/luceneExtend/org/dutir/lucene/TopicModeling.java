@@ -61,14 +61,8 @@ public class TopicModeling {
     private void get_LDA_Topics() throws IOException{
         
         String outputFilePath = ApplicationSetup.getProperty("TopicModel.outputPath", "./lda_topic.txt"); 
-        File file = new File(outputFilePath);
-        if (!file.exists()) {
-            file.createNewFile();
-        }
 
         /*Initialize LDA parameters*/
-        FileWriter fw = new FileWriter(file.getAbsoluteFile());
-        BufferedWriter bw = new BufferedWriter(fw);
         short numOfTopics = Short.parseShort(ApplicationSetup.getProperty("TopicModel.Topic_Number","100"));
         double docTopicPrior = 2d/numOfTopics;
         double topicWordPrior = Double.parseDouble(ApplicationSetup.getProperty("TopicModel.Lda_Word_Prior","0.01"));
@@ -142,7 +136,7 @@ public class TopicModeling {
             
         }
         
-        logger.info("Constructing Doc_Word Matrix complete at " + new java.util.Date().getTime());
+        logger.info("Constructing Doc_Word Matrix complete ");
         /*Shuffle terms in a doc/word vector for sampling*/
 //        logger.debug("Shuffle terms in the Doc_Word Matrix ");
 //                
@@ -165,10 +159,8 @@ public class TopicModeling {
                       RANDOM,
                       handler);
         
-        handler.fullReport(sample,5,2,true);
+        handler.storeDocTopicReport(sample,docIds,false, outputFilePath);
         
-        
-        bw.close();
     }
 
     /**
@@ -239,7 +231,7 @@ public class TopicModeling {
                           RANDOM,
                           handler);
 
-        handler.storeDocTopicReport(sample,docIds,false, "topics.txt");
+        handler.storeDocTopicReport(sample,docIds,false, "topic.txt");
       
 
     }
