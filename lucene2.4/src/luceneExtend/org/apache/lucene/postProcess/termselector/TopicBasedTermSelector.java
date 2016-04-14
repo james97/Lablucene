@@ -53,7 +53,7 @@ public class TopicBasedTermSelector extends TermSelector {
 	static int strategy = Integer.parseInt(ApplicationSetup.getProperty(
 			"TopicBasedTermSelector.strategy", "3"));
 	static Boolean dataFromFile = Boolean.parseBoolean(ApplicationSetup.getProperty(
-            "TopicBasedTermSelector.dataFromFile", "true"));
+            "TopicBasedTermSelector.dataFromFile", "false"));
 	
 	static boolean expTag = Boolean.parseBoolean(ApplicationSetup.getProperty(
 			"TopicBasedTermSelector.expTag", "false"));
@@ -340,7 +340,9 @@ public class TopicBasedTermSelector extends TermSelector {
 	          TLongObjectHashMap<double[]> docTopics = new TLongObjectHashMap<double[]>();
 	          File topicData = new File(topicDataPath);
 	          if (!topicData.exists())
-	              throw new IOException("Doc Topic data file can't be found!");
+	               throw new IOException("Doc Topic data can't be found from path " + topicDataPath);
+	          
+	          logger.info("Start loading Doc/Topic info from " + topicDataPath);
               BufferedReader br = new BufferedReader(new FileReader(topicData));
               String eachDoc = null;
               int topicNum = 0;
@@ -354,15 +356,21 @@ public class TopicBasedTermSelector extends TermSelector {
                   docTopics.put(docId, topicProbs);
                   if (topicNum == 0)
                       topicNum = topicProbs.length;
-               }       
+               }     
+              br.close();
+              logger.info("Loading completed");
               docTopicProbs = new double[docIds.length][topicNum];
               //Get topic probs for each docs
+              logger.info("Getting topic vectors for feedback docs");
 	          for (int i = 0; i< docIds.length; i++){
-	              if (docTopics.get(docIds[i]) != null)
+	              if (docTopics.get(docIds[i]) != null){
 	                  docTopicProbs[i] = docTopics.get(docIds[i]);
+	                  logger.debug("topic vector lenght for doc" + docIds[i] + "is " + docTopicProbs[i].length );
+	              }
 	              else
 	                  throw new IllegalStateException("Can't find topic probabilities for doc " + docIds[i]);
 	          }
+	          logger.info("Getting topic vectors for feedback docs is done!");
               
           }else{
               docTopicProbs = new double[sample.numDocuments()][sample.numTopics()];

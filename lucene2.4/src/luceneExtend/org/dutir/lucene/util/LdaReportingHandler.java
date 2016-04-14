@@ -145,9 +145,6 @@ public class LdaReportingHandler implements ObjectHandler<LatentDirichletAllocat
                 counter.put(Integer.valueOf(topic),sample.documentTopicCount(doc,topic));
             //List<Integer> topTopics = counter.keysOrderedByCountList();
             List<Integer> Topics = new ArrayList<Integer>(counter.keySet());
-            System.out.println("\nDOC " + doc);
-            System.out.println("TOPIC    COUNT    PROB");
-            System.out.println("----------------------");
             double[] topicProbs = new double[numTopics];
             DecimalFormat df = new DecimalFormat("#.####");
             df.setRoundingMode(RoundingMode.CEILING);
@@ -168,7 +165,7 @@ public class LdaReportingHandler implements ObjectHandler<LatentDirichletAllocat
             fw.write(dataStored + "\n");
             if (doc % 10 == 0)
                 fw.flush();
-            System.out.println(String.format("%d " + Arrays.toString(topicProbs), docIds[doc]));
+            //System.out.println(String.format("%d " + Arrays.toString(topicProbs), docIds[doc]));
             if (!reportTokens) continue;
             int numDocTokens = sample.documentLength(doc);
             for (int tok = 0; tok < numDocTokens; ++tok) {

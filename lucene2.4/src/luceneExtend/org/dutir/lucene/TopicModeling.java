@@ -3,9 +3,6 @@
  */
 package org.dutir.lucene;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -63,12 +60,12 @@ public class TopicModeling {
         String outputFilePath = ApplicationSetup.getProperty("TopicModel.outputPath", "./lda_topic.txt"); 
 
         /*Initialize LDA parameters*/
-        short numOfTopics = Short.parseShort(ApplicationSetup.getProperty("TopicModel.Topic_Number","100"));
+        short numOfTopics = Short.parseShort(ApplicationSetup.getProperty("TopicModel.Topic_Number","500"));
         double docTopicPrior = 2d/numOfTopics;
         double topicWordPrior = Double.parseDouble(ApplicationSetup.getProperty("TopicModel.Lda_Word_Prior","0.01"));
-        int burninEpochs = Integer.parseInt(ApplicationSetup.getProperty("TopicModel.Lda_Burnin","80"));
-        int sampleLag = Integer.parseInt(ApplicationSetup.getProperty("TopicModel.Lda_Sample_Lag","30"));
-        int numOfSamples = Integer.parseInt(ApplicationSetup.getProperty("TopicModel.Lda_Sample_Number","30"));
+        int burninEpochs = Integer.parseInt(ApplicationSetup.getProperty("TopicModel.Lda_Burnin","10"));
+        int sampleLag = Integer.parseInt(ApplicationSetup.getProperty("TopicModel.Lda_Sample_Lag","5"));
+        int numOfSamples = Integer.parseInt(ApplicationSetup.getProperty("TopicModel.Lda_Sample_Number","5"));
         
        //Get doc id list and build the DOC_WORDS matrix
         SymbolTable SYMBOL_TABLE = new MapSymbolTable();
@@ -86,7 +83,7 @@ public class TopicModeling {
             SYMBOL_TABLE.getOrAddSymbol((String) termItr.next());
         
         
-        logger.info("Start to construct Doc_Word Matrix at " + new java.util.Date().getTime());
+        logger.info("Start to construct Doc_Word Matrix ");
         int [] docIds = new int[indexReader.maxDoc()];
         for (int i = 0; i<indexReader.maxDoc(); i++) {
             if (indexReader.isDeleted(i))
@@ -144,7 +141,8 @@ public class TopicModeling {
 //            Arrays.permute(words, RANDOM);
 //        }
 //        logger.debug("Shuffle done");
-//        
+//      
+        logger.info("Start LDA... ");
         LdaReportingHandler handler
         = new LdaReportingHandler(SYMBOL_TABLE);
         
@@ -158,6 +156,7 @@ public class TopicModeling {
                       numOfSamples,
                       RANDOM,
                       handler);
+        logger.info("LDA sampling is done! ");
         
         handler.storeDocTopicReport(sample,docIds,false, outputFilePath);
         
