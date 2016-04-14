@@ -3,9 +3,11 @@
  */
 package org.apache.lucene.postProcess.termselector;
 
+import gnu.trove.TLongObjectHashMap;
 import gnu.trove.TObjectIntHashMap;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -50,10 +52,16 @@ public class TopicBasedTermSelector extends TermSelector {
 			.getProperty("Lucene.Search.LanguageModel", "false"));
 	static int strategy = Integer.parseInt(ApplicationSetup.getProperty(
 			"TopicBasedTermSelector.strategy", "3"));
+	static Boolean dataFromFile = Boolean.parseBoolean(ApplicationSetup.getProperty(
+            "TopicBasedTermSelector.dataFromFile", "false"));
+	
 	static boolean expTag = Boolean.parseBoolean(ApplicationSetup.getProperty(
 			"TopicBasedTermSelector.expTag", "false"));
 	static boolean withOrgScore = Boolean.parseBoolean(ApplicationSetup.getProperty(
 	            "TopicBasedTermSelector.withOrgScore", "false"));
+	static String topicDataPath = ApplicationSetup.getProperty(
+            "TopicBasedTermSelector.topicDataPath", "docTopics.txt");
+	
 	static int expNum = Integer.parseInt(ApplicationSetup.getProperty(
 			"TopicBasedTermSelector.expNum", "15"));
 	static int expDoc = Integer.parseInt(ApplicationSetup.getProperty(
@@ -131,7 +139,7 @@ public class TopicBasedTermSelector extends TermSelector {
 	 */
 	@Override
 	public void assignTermWeights(int[] docids, float scores[],
-			QueryExpansionModel QEModel) {
+			QueryExpansionModel QEModel) throws IOException {
 		dscores = new float[scores.length];
 		System.arraycopy(scores, 0, dscores, 0, scores.length);
 
@@ -158,6 +166,7 @@ public class TopicBasedTermSelector extends TermSelector {
 		dfMap = new TObjectIntHashMap<String>();
 		for (int i = 0; i < docids.length; i++) {
 			int docid = docids[i];
+			System.out.println(docids[i]);
 			TermFreqVector tfv = null;
 			try {
 				tfv = this.searcher.getIndexReader().getTermFreqVector(docid,
@@ -267,8 +276,8 @@ public class TopicBasedTermSelector extends TermSelector {
 			theta[i] = theta[i] / total;
 		}
 
-		allTerms = selectTerm(SYMBOL_TABLE, sample, QEModel,
-				theta, querytermid, lda, tAss);
+		selectTerm(SYMBOL_TABLE, sample, QEModel,
+				theta, querytermid, lda, tAss, docids);
 	}
 
 	float[] sampleTheta(int numTopics, LatentDirichletAllocation lda,
@@ -318,37 +327,81 @@ public class TopicBasedTermSelector extends TermSelector {
 	private ExpansionTerm[] selectTerm(SymbolTable SYMBOL_TABLE,
 			GibbsSample sample, QueryExpansionModel QEModel, float theta[],
 			int querytermid[], LatentDirichletAllocation lda,
-			TermAssociation tAss) {
+			TermAssociation tAss,
+			int []docIds) throws IOException {
+	    
 		ExpansionTerm[] allTerms = new ExpansionTerm[SYMBOL_TABLE.numSymbols()];
+        int index[] = Arrays.indexSort(theta);
+        
+        double docTopicProbs[][] = null;
+	      if (dataFromFile){
+	          //TODO:read doc topic matrix from the file to a hashmap
+	          
+	          TLongObjectHashMap<double[]> docTopics = new TLongObjectHashMap<double[]>();
+	          File topicData = new File(topicDataPath);
+	          if (!topicData.exists())
+	               throw new IOException("Doc Topic data can't be found from path " + topicDataPath);
+	          
+	          logger.info("Start loading Doc/Topic info from " + topicDataPath);
+              BufferedReader br = new BufferedReader(new FileReader(topicData));
+              String eachDoc = null;
+              int topicNum = 0;
+              while ((eachDoc = br.readLine()) != null) {
+                  String [] data = eachDoc.split("\t");
+                  int docId = Integer.parseInt(data[0]);
+                  double[] topicProbs = new double[data.length - 1];
+                  for (int i = 1; i < data.length; i++)
+                      topicProbs[i - 1] = Double.parseDouble(data[i].trim());
+                  
+                  docTopics.put(docId, topicProbs);
+                  if (topicNum == 0)
+                      topicNum = topicProbs.length;
+               }     
+              br.close();
+              logger.info("Loading completed");
+              docTopicProbs = new double[docIds.length][topicNum];
+              //Get topic probs for each docs
+              logger.info("Getting topic vectors for feedback docs");
+	          for (int i = 0; i< docIds.length; i++){
+	              if (docTopics.get(docIds[i]) != null){
+	                  docTopicProbs[i] = docTopics.get(docIds[i]);
+	                  logger.debug("topic vector lenght for doc" + docIds[i] + "is " + docTopicProbs[i].length );
+	              }
+	              else
+	                  throw new IllegalStateException("Can't find topic probabilities for doc " + docIds[i]);
+	          }
+	          logger.info("Getting topic vectors for feedback docs is done!");
+              
+          }else{
+              docTopicProbs = new double[sample.numDocuments()][sample.numTopics()];
 
-		int index[] = Arrays.indexSort(theta);
-		double[][] docTopicProbs = new double[sample.numDocuments()][sample.numTopics()];
-		if (true) {
-			for (int i = 0; i < index.length; i++) {
-				float prob = 0;
-				for (int j = 0; j < querytermid.length; j++) {
-					prob += Idf.log(sample.topicWordProb(index[i],
-							querytermid[j]));
-				}
-				if (logger.isDebugEnabled())
-					logger.debug("topic: " + index[i] + " - " + theta[index[i]]
-							+ ", topicCount: " + sample.topicCount(index[i])
-							+ ", prob: " + prob);
-			}
-			StringBuilder buf = new StringBuilder();
-			
-			for (int i = 0, n = sample.numDocuments(); i < n; i++) {
-				buf.append(i + ":\t");
-				for (int j = 0; j < sample.numTopics(); j++) {
-					buf.append(Rounding.round(sample.documentTopicProb(i, j), 5)
-							+ "\t");
-					docTopicProbs[i][j] =  Rounding.round(sample.documentTopicProb(i, j), 5);
-				}
-				buf.append("\n");
-			}
-			if (logger.isDebugEnabled())
-				logger.debug("doc topic distribution\n" + buf.toString());
-		}
+              for (int i = 0; i < index.length; i++) {
+                  float prob = 0;
+                  for (int j = 0; j < querytermid.length; j++) {
+                      prob += Idf.log(sample.topicWordProb(index[i],
+                              querytermid[j]));
+                  }
+                  if (logger.isDebugEnabled())
+                      logger.debug("topic: " + index[i] + " - " + theta[index[i]]
+                              + ", topicCount: " + sample.topicCount(index[i])
+                              + ", prob: " + prob);
+              }
+              StringBuilder buf = new StringBuilder();
+              
+              for (int i = 0, n = sample.numDocuments(); i < n; i++) {
+                  buf.append(i + ":\t");
+                  for (int j = 0; j < sample.numTopics(); j++) {
+                      buf.append(Rounding.round(sample.documentTopicProb(i, j), 5)
+                              + "\t");
+                      docTopicProbs[i][j] =  Rounding.round(sample.documentTopicProb(i, j), 5);
+                  }
+                  buf.append("\n");
+              }
+              if (logger.isDebugEnabled())
+                  logger.debug("doc topic distribution\n" + buf.toString());
+          
+          }
+		
 
 		final int len = allTerms.length;
 		int maxTopic = index[index.length - 1];
@@ -356,7 +409,7 @@ public class TopicBasedTermSelector extends TermSelector {
 			logger.debug("max topic: " + maxTopic);
 
 
-		 Iterator it = originalQueryTermidSet.iterator();
+		 Iterator<String> it = originalQueryTermidSet.iterator();
          String[] qterms = new String[originalQueryTermidSet.size()];
          int qCount = 0;
          while (it.hasNext()) {
@@ -364,19 +417,10 @@ public class TopicBasedTermSelector extends TermSelector {
                  qCount++;
          }
          
-         // get query terms topic probabilities
-         
-         float qtermTopicProb[][] = new float[qterms.length][index.length];
-         for(int m = 0; m < qterms.length; m++){
-             int id = SYMBOL_TABLE.symbolToID(qterms[m]);
-             for (int k = 0; k < index.length; k++)
-                 qtermTopicProb[m][k] = (float) sample.topicWordProb(index[k], id);
-         }
+        
      
          
-         int maxQueryTermId = querytermid[querytermid.length - 1];
-		
-		if (strategy == 1) { // take advantage of the topic with the highest
+         if (strategy == 1) { // take advantage of the topic with the highest
 								// prob
 			float totalweight = 0;
 			int feedbackNum = sample.numDocuments();
@@ -441,12 +485,6 @@ public class TopicBasedTermSelector extends TermSelector {
 				weight = 0;
 				
 				double []topicProb = new double[index.length];
-				float avg = 0.0f;
-				for (int k = 0; k < index.length; k++){
-					topicProb[k] = sample.topicWordProb(index[k], i);
-					avg += topicProb[k];
-				}
-				    avg /= index.length;
 				    
 				StandardDeviation sd =  new StandardDeviation();
 				double termDeviation = sd.evaluate(topicProb);
@@ -508,13 +546,13 @@ public class TopicBasedTermSelector extends TermSelector {
                 ArrayList<HashSet<Integer>> qTermPostings = new ArrayList<HashSet<Integer>>();
                 for (qCount = 0; qCount < qterms.length; qCount++) {
                     Term qterm = new Term(this.field, qterms[qCount]);
-                    TermDocs docIds;
-                    docIds = ir.termDocs(qterm);
+                    TermDocs queryPostingIds;
+                    queryPostingIds = ir.termDocs(qterm);
 
                     HashSet<Integer> qPostings = new HashSet<Integer>();
 
-                    while (docIds.next())
-                        qPostings.add(docIds.doc());
+                    while (queryPostingIds.next())
+                        qPostings.add(queryPostingIds.doc());
 
                     qTermPostings.add(qPostings);
                     qCollProb[qCount] = qPostings.size()
@@ -621,13 +659,20 @@ public class TopicBasedTermSelector extends TermSelector {
 		}else if (strategy == 5) { // add by Jun Miao
 			// compare the probability distribution of query terms and 
 			//candidate feedback terms.
+		    
+		    // get query terms topic probabilities
+	         
+	         float qtermTopicProb[][] = new float[qterms.length][index.length];
+	         for(int m = 0; m < qterms.length; m++){
+	             int id = SYMBOL_TABLE.symbolToID(qterms[m]);
+	             for (int k = 0; k < index.length; k++)
+	                 qtermTopicProb[m][k] = (float) sample.topicWordProb(index[k], id);
+	         }
 
 		    float totalweight = 0;
             
             
             int feedbackNum = sample.numDocuments();
-            IndexReader ir = this.searcher.getIndexReader();
-            int docInColl = ir.numDocs();
             for (int i = 0; i < len; i++) {
                     String term = SYMBOL_TABLE.idToSymbol(i);
                     TermsCache.Item item = getItem(term);
@@ -644,7 +689,7 @@ public class TopicBasedTermSelector extends TermSelector {
                             topicProb[k] = (float) sample.topicWordProb(index[k], i);
                     
                     for(int m = 0; m < qterms.length; m++){
-                        topicWeight += this.cosine_similarity(topicProb, qtermTopicProb[m]);
+                        topicWeight += cosine_similarity(topicProb, qtermTopicProb[m]);
                     }
 
                     topicWeight /= qterms.length;
@@ -694,6 +739,7 @@ public class TopicBasedTermSelector extends TermSelector {
 		}else if (strategy >9){
             // term weight based on feedback quality
 		    System.out.println("I am in strategy " + strategy + "\n");
+		    
 	        double []feedDocScores = getFeedDocScores(strategy, sample.numDocuments(), 
 	                dscores, docTopicProbs, withOrgScore, beta);
 	        
@@ -754,9 +800,7 @@ public class TopicBasedTermSelector extends TermSelector {
 	static float mu = Integer.parseInt(ApplicationSetup.getProperty(
 			"topicSL.mu", dmu));
     private BufferedReader br;
-    private ExpansionTerm[] allTerms;
-
-	// float numOfTokens = this.searcher.getNumTokens(field);
+    // float numOfTokens = this.searcher.getNumTokens(field);
 	public float score(float tf, float docLength, float termFrequency,
 			float numberOfTokens) {
 		float pc = termFrequency / numberOfTokens;
@@ -904,7 +948,7 @@ public class TopicBasedTermSelector extends TermSelector {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		StringBuilder buf = new StringBuilder();
+
 	}
 
 	@Override

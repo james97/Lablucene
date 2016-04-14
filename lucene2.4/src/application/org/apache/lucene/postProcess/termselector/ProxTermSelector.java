@@ -96,7 +96,7 @@ public class ProxTermSelector extends TermSelector {
 	
 	
 	public void assignTermWeights(int[] docids, float[] scores,
-			QueryExpansionModel QEModel) {
+			QueryExpansionModel QEModel) throws IOException {
 		if (indexUtil == null)
 			indexUtil = new IndexUtility(this.searcher);
 		GeoExpansionTerm posCBTerm = new GeoExpansionTerm(this.originalQueryTermidSet);

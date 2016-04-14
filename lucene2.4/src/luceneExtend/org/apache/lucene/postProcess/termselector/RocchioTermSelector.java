@@ -2,6 +2,7 @@ package org.apache.lucene.postProcess.termselector;
 
 import gnu.trove.TObjectFloatHashMap;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -34,7 +35,7 @@ public class RocchioTermSelector extends TermSelector {
 
 	@Override
 	public void assignTermWeights(int[] docids, float scores[],
-			QueryExpansionModel QEModel) {
+			QueryExpansionModel QEModel) throws IOException {
 		int effDocuments = docids.length;
 		TermSelector selector = TermSelector.getTermSelector(termSelector,
 				this.searcher);

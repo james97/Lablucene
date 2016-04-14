@@ -275,7 +275,7 @@ public abstract class TermSelector {
 	// QueryExpansionModel QEModel);
 
 	public abstract void assignTermWeights(int[] docids, float scores[],
-			QueryExpansionModel QEModel);
+			QueryExpansionModel QEModel) throws IOException;
 
 	public abstract void assignTermWeights(String terms[][], int freqs[][],
 			TermPositionVector tfvs[], QueryExpansionModel QEModel);

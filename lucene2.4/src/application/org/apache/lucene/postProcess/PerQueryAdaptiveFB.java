@@ -28,7 +28,7 @@ public class PerQueryAdaptiveFB extends FeatureExtractPP {
 	
     
 	public TopDocCollector postProcess(RBooleanQuery query,
-			TopDocCollector topDoc, Searcher seacher) {
+			TopDocCollector topDoc, Searcher seacher) throws IOException {
 		setup(query, topDoc, seacher); // it is necessary
 
 			TIntDoubleHashMap insts = makeInstance(0, Integer.parseInt(query.getTopicId()));

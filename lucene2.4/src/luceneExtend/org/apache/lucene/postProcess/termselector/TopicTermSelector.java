@@ -93,7 +93,7 @@ public class TopicTermSelector extends TermSelector {
 	 */
 	@Override
 	public void assignTermWeights(int[] docids, float scores[],
-			QueryExpansionModel QEModel) {
+			QueryExpansionModel QEModel) throws IOException {
 		dscores = new float[scores.length];
 		System.arraycopy(scores, 0, dscores, 0, scores.length);
 

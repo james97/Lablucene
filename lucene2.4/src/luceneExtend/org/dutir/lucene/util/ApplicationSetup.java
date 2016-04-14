@@ -845,6 +845,7 @@ public class ApplicationSetup {
 			}
 		}
 		else{
+		    System.out.println("querycounter file doesn't exist. Creating one at " + ApplicationSetup.TREC_RESULTS);
 		    if(fx.createNewFile()){
 		        FileWriter fw = new FileWriter(fx);
 		        fw.write("0");

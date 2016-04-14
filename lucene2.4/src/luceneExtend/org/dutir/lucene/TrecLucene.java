@@ -92,6 +92,7 @@ public class TrecLucene {
 
 	/** Specifies whether to retrieve from an indexed collection */
 	protected boolean retrieving;
+	
 
 	/** Specifies whether to print the document index */
 	protected boolean printdocid;
@@ -105,6 +106,11 @@ public class TrecLucene {
 	/** Specifies whether to print the direct file */
 	protected boolean printdirect;
 
+	/**Specifies whether to apply LDA topic modeling 
+	 * on the collection and calculating the topic/doc
+	 * probability matrix  **/
+	protected boolean topicModeling = false;
+	
 	/** Specifies whether to print the statistics file */
 	protected boolean printstats;
 
@@ -172,6 +178,8 @@ public class TrecLucene {
 				.println("  -r --retrieve	retrieve from an indexed collection");
 		System.out
 				.println("  -e --evaluate	evaluates the results in the directory");
+		System.out
+        .println("  -t --topic   generate a topic/doc matrix on the whole collection");
 		System.out.println("				   var/results with the specified qrels file");
 		System.out.println("				   in the file etc/trec.qrels");
 		System.out.println("");
@@ -261,6 +269,9 @@ public class TrecLucene {
 			else if (args[pos].equals("-r") || args[pos].equals("--retrieve")) {
 				retrieving = true;
 			}
+			else if (args[pos].equals("-t") || args[pos].equals("--topic")) {
+                topicModeling = true;
+            }
 
 			else if (args[pos].equals("-v") || args[pos].equals("--inverted"))
 				inverted = true;
@@ -353,14 +364,21 @@ public class TrecLucene {
 
 		if (queryexpand && !retrieving)
 			return ERROR_EXPAND_NOT_RETRIEVE;
+		
+		if (topicModeling && indexing)
+		    return ERROR_TOPIC_AND_INDEX;
+		
+		if (topicModeling && retrieving)
+		    return ERROR_TOPIC_AND_RETRIEVE;
 
 		return ARGUMENTS_OK;
 	}
 
 	/**
 	 * Calls the required classes from Terrier.
+	 * @throws IOException 
 	 */
-	public void run() {
+	public void run() throws IOException {
 		if (printVersion) {
 			version();
 			return;
@@ -503,13 +521,18 @@ public class TrecLucene {
 				}
 			}
 		}
+		else if(topicModeling){
+		    /**Apply LDA on the whole collection and write the **/
+		    TopicModeling tm = new TopicModeling();
+		    tm.getTopics();
+		}
 
 		long endTime = System.currentTimeMillis();
 		if(logger.isInfoEnabled()) logger.info("Time elapsed: " + (endTime - startTime) / 1000.0d
 				+ " seconds.");
 	}
 
-	public void applyOptions(int status) {
+	public void applyOptions(int status) throws IOException {
 		switch (status) {
 		case ERROR_NO_ARGUMENTS:
 			usage();
@@ -590,6 +613,8 @@ public class TrecLucene {
 	protected static final int ERROR_LANGUAGEMODEL_NOT_RETRIEVE = 17;
 	protected static final int ERROR_HADOOP_NOT_RETRIEVAL = 18;
 	protected static final int ERROR_HADOOP_ONLY_INDEX = 19;
+	protected static final int ERROR_TOPIC_AND_INDEX = 20;
+	protected static final int ERROR_TOPIC_AND_RETRIEVE = 21;
 	
 	/**
 	 * The main method that starts the application
